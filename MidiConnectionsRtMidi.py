@@ -40,17 +40,18 @@ class Connections:
         self.callback(message)
         
     def MidiFormat(self, data):
-        if data.isController():
-            return str("CC %i %i %i\n" % (data.getChannel(), data.getControllerNumber(), data.getControllerValue()))
-        if data.isSysEx():
-            SysExRaw = data.getSysExData()
-            decoded_SysExRaw = list(hex(ord (i)) for i in SysExRaw)
-            return str("%s\n" % decoded_SysExRaw)
-        else:
-            DataRaw = data.getRawData()
-            print("\n")
-            decoded_DataRaw = list(hex(ord (i)) for i in DataRaw)
-            return str("%s\n" % decoded_DataRaw)
+#        if data.isController():
+#            return str("CC %i %i %i\n" % (data.getChannel(), data.getControllerNumber(), data.getControllerValue()))
+#        if data.isSysEx():
+#            SysExRaw = data.getSysExData()
+#            decoded_SysExRaw = list(hex(ord (i)) for i in SysExRaw)
+#            return str("%s\n" % decoded_SysExRaw)
+#        else:
+#            DataRaw = data.getRawData()
+#            print("\n")
+#            decoded_DataRaw = list(hex(ord (i)) for i in DataRaw)
+#            return str("%s\n" % decoded_DataRaw)
+        return data
             
     def refresh_connections(self):
         #connect to input port wishes
