@@ -1,3 +1,6 @@
 FluxusBros-Interface
 
 A wxPython GUI for the Visuals Mixing Fluxus Script
+
+Requirements:
+PyRtMidi (use the own patched version at http://github.com/tedr56/PyRtMidi)
