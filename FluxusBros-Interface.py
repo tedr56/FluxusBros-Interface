@@ -6,6 +6,7 @@ import re
 import rtmidi
 from MidiConnectionsRtMidi import Connections
 from TableGui import TablePanel
+from SequencerGui import SequencerPanel
 
 APP_SIZE_X = 300
 APP_SIZE_Y = 200
@@ -20,25 +21,36 @@ class MyFrame(wx.Frame):
         self.InitMidi()
         self.InitPanels()
     def InitPanels(self):
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
         self.Table = TablePanel(self)
+        self.Sequencer = SequencerPanel(self)
+        hbox.Add(self.Table, flag=wx.EXPAND)
+        hbox.Add(self.Sequencer, flag=wx.EXPAND)
+        self.SetSizer(hbox)
     def InitMidi(self):
-        self.MidiConnect = Connections(self.MidiRefresh)
-    def MidiRefresh(self, data):
-        wx.CallAfter(self.MidiDispatch, data)
+        self.MidiConnect = Connections(self.MidiInputRefresh)
+    def MidiInputRefresh(self, data):
+        wx.CallAfter(self.MidiInDispatch, data)
+    def MidiOutputRefresh(self, data):
+        wx.CallAfter(self.MidiOutDispatch, data)
+    def MidiOutDispatch(self, data):
+        print data
+        for m in data:
+            self.MidiConnect.sendMessage(m)
     def MidiDispatch(self, MidiData):
         if MidiData.isController():
             for C in self.InputCC:
                 if MidiData.isForChannel(C[0][0]):
                     if MidiData.getControllerNumber() == C[0][1]:
-                        C[1](MidiData.getControllerValue())
+                        C[1](value=MidiData.getControllerValue())
         elif MidiData.isNoteOnOrOff():
             for N in self.InputNote:
                 if MidiData.isForChannel(N[0][0]):
                     if MidiData.getNoteNumber() == N[0][1]:
                         if MidiData.isNoteOn():
-                            N[1](MidiData.getControllerValue())
+                            N[1](value=MidiData.getControllerValue())
                         else:
-                            N[1](0)
+                            N[1](value=0)
     def SetControls(self, Callback, Inputs):
         for CCin in Inputs['CC']:
             self.InputCC.append([CCin, Callback])

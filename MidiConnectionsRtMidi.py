@@ -34,6 +34,8 @@ class Connections:
         self.add_out_port_wish(FluxusInPort)
         self.refresh_connections()
 
+    def sendMessage(self, message):
+        self.MidiOut.sendMessage(message)
     def CallBack(self, data):
         message = self.MidiFormat(data)
         #print message
@@ -49,8 +51,9 @@ class Connections:
 #        else:
 #            DataRaw = data.getRawData()
 #            print("\n")
-#            decoded_DataRaw = list(hex(ord (i)) for i in DataRaw)
+#            decoded_DataRaw = list(hex(ord (i)) for i in data.getRawData())
 #            return str("%s\n" % decoded_DataRaw)
+        print list(hex(ord (i)) for i in data.getRawData())
         return data
             
     def refresh_connections(self):

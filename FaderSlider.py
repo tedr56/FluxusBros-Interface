@@ -1,16 +1,17 @@
 import wx
+import rtmidi
 
 class Control:
     def __init__(self):
         self.InputCC = []
         self.InputNote = []
         self.InputOSC = []
-    def SetInput(self, inputtype, address, option = None):
-        if inputtype=='CC' or inputtype=='cc':
+    def SetInput(self, input_type='CC', address=[0,0], option = None):
+        if input_type=='CC' or input_type=='cc':
             self.SetMidiCCInput(address, option)
-        elif inputtype=='note' or inputtype=='Note':
+        elif input_type=='note' or input_type=='Note':
             self.SetMidiNoteInput(address, option)
-        elif inputtype=='OSC' or inputtype=='osc':
+        elif input_type=='OSC' or input_type=='osc':
             self.SetOSCInput(address, option)
     def SetMidiCCInput(self, address, option=None):
         self.InputCC.append(address)
@@ -35,9 +36,17 @@ class wxFader(wx.Slider, Control):
         wx.Slider.__init__(self, *args, style = wx.SL_AUTOTICKS |  wx.SL_VERTICAL | wx.SL_LABELS | wx.SL_INVERSE, **kwargs)
         Control.__init__(self)
         self.SetRange(0, 127)
-    def Update(self, Value):
-        self.SetValue(Value)
-        
+    def Update(self, input_type='cc', address=[0,0], value=0):
+        self.SetValue(value)
+    def getMessage(self):
+        messages = []
+        #Controls Event : Type = 0x18
+        for c in self.InputCC:
+            messageCC = rtmidi.MidiMessage()
+            #print c
+            messageCC.controllerEvent(c[0] , c[1], self.GetValue())
+            messages.append(messageCC)
+        return messages
 class wxCrossFader(wxFader):
     def __init__(self, *args, **kwargs):
         wx.Slider.__init__(self, *args, style = wx.SL_AUTOTICKS |  wx.SL_HORIZONTAL | wx.SL_LABELS | wx.SL_INVERSE, **kwargs)
