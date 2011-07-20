@@ -22,13 +22,13 @@ class MyFrame(wx.Frame):
         self.InitMidi()
         self.InitPanels()
     def InitPanels(self):
-        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        hbox = wx.BoxSizer(wx.EXPAND|wx.HORIZONTAL)
         self.Media = MediaPanel(self)
         self.Table = TablePanel(self)
         self.Sequencer = SequencerPanel(self)
-        hbox.Add(self.Media, flag=wx.EXPAND)
-        hbox.Add(self.Table, flag=wx.EXPAND)
-        hbox.Add(self.Sequencer, flag=wx.EXPAND)
+        hbox.Add(self.Media, flag=wx.EXPAND|wx.ALL)
+        hbox.Add(self.Table, flag=wx.EXPAND|wx.ALL)
+        hbox.Add(self.Sequencer, flag=wx.EXPAND|wx.ALL)
         self.SetSizer(hbox)
     def InitMidi(self):
         self.MidiConnect = Connections(self.MidiInputRefresh)

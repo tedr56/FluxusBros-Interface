@@ -1,6 +1,13 @@
 import wx
-from FaderSlider import wxFader
 import rtmidi
+from FaderSlider import wxFader
+#try:
+    #from agw import KnobCtrl
+#    import agw
+#except ImportError: # if it's not there locally, try the wxPython lib.
+    #from wx.lib.agw import KnobCtrl
+#import wx.lib.agw
+from wx.lib.agw.knobctrl import KnobCtrl
 
 class TablePanel(wx.Panel):
     def __init__(self, *args, **kwargs):
@@ -11,6 +18,19 @@ class TablePanel(wx.Panel):
 
     def InitUI(self):
         vbox = wx.BoxSizer(wx.VERTICAL)
+        hbox0 = wx.BoxSizer(wx.HORIZONTAL)
+        self.knob1 = KnobCtrl(self)
+        self.knob2 = KnobCtrl(self)
+        self.knob3 = KnobCtrl(self)
+        self.knob4 = KnobCtrl(self)
+#        hbox0.Add(self.knob1, flag=wx.EXPAND)
+#        hbox0.Add(self.knob2, flag=wx.EXPAND)
+#        hbox0.Add(self.knob3, flag=wx.EXPAND)
+#        hbox0.Add(self.knob4, flag=wx.EXPAND)
+        hbox0.Add(self.knob1)
+        hbox0.Add(self.knob2)
+        hbox0.Add(self.knob3)
+        hbox0.Add(self.knob4)                
         hbox1 = wx.BoxSizer(wx.HORIZONTAL)
         self.fader1 = wxFader(self)
         self.fader2 = wxFader(self)
@@ -23,6 +43,7 @@ class TablePanel(wx.Panel):
         hbox1.Add(self.fader2, flag=wx.EXPAND)
         hbox1.Add(self.fader3, flag=wx.EXPAND)
         hbox1.Add(self.fader4, flag=wx.EXPAND)
+        vbox.Add(hbox0, flag=wx.EXPAND|wx.ALL)
         vbox.Add(hbox1, proportion=1, flag=wx.EXPAND|wx.ALL)
         self.SetSizer(vbox)
     def OnScrollChanged(self, event):
