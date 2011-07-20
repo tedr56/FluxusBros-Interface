@@ -5,6 +5,7 @@ import wx
 import re
 import rtmidi
 from MidiConnectionsRtMidi import Connections
+from MediaGui import MediaPanel
 from TableGui import TablePanel
 from SequencerGui import SequencerPanel
 
@@ -22,8 +23,10 @@ class MyFrame(wx.Frame):
         self.InitPanels()
     def InitPanels(self):
         hbox = wx.BoxSizer(wx.HORIZONTAL)
+        self.Media = MediaPanel(self)
         self.Table = TablePanel(self)
         self.Sequencer = SequencerPanel(self)
+        hbox.Add(self.Media, flag=wx.EXPAND)
         hbox.Add(self.Table, flag=wx.EXPAND)
         hbox.Add(self.Sequencer, flag=wx.EXPAND)
         self.SetSizer(hbox)

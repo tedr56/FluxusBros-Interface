@@ -15,7 +15,7 @@ class SequencerPanel(wx.Panel):
         hbox1.Add(self.event_type , proportion=1)
         vbox.Add(hbox1)
         self.inputlist = wx.TextCtrl(self, style=wx.TE_MULTILINE)
-        vbox.Add(self.inputlist, proportion=1, flag=wx.EXPAND)
+        vbox.Add(self.inputlist, proportion=1, flag=wx.EXPAND|wx.ALL)
         self.SetSizer(vbox)
 
     def UpdateMidi(self, data):

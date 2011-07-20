@@ -23,7 +23,7 @@ class TablePanel(wx.Panel):
         hbox1.Add(self.fader2, flag=wx.EXPAND)
         hbox1.Add(self.fader3, flag=wx.EXPAND)
         hbox1.Add(self.fader4, flag=wx.EXPAND)
-        vbox.Add(hbox1, proportion=1, flag=wx.EXPAND)
+        vbox.Add(hbox1, proportion=1, flag=wx.EXPAND|wx.ALL)
         self.SetSizer(vbox)
     def OnScrollChanged(self, event):
         print("Scroll!")
