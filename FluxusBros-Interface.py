@@ -9,7 +9,7 @@ from MediaGui import MediaPanel
 from TableGui import TablePanel
 from SequencerGui import SequencerPanel
 
-APP_SIZE_X = 300
+APP_SIZE_X = 500
 APP_SIZE_Y = 200
 
 class MyFrame(wx.Frame):
@@ -61,7 +61,8 @@ class MyFrame(wx.Frame):
             self.InputNote.append([Notein, Callback])
         for OSCin in Inputs['OSC']:
             self.InputOSC.append([OSCin, Callback])
-        
+    def SetPlayer(self, event):
+        print("New Player : %s" % event.GetEventObject().GetValue())
          
 class MyApp(wx.App):
     def OnInit(self, *args, **kwargs):
