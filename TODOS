@@ -1,0 +1,27 @@
+TODOS
+ Parse TriggerFiles
+ Send OSC=>Fluxus
+ Create Screenshots <=> Fluxus (OSC)
+ Trigger Class
+ Parse Control Files
+ import wx Config
+ Load Defaults Control Values
+ Hook Mode
+ Graphic Class (Sequencer)
+ Clock Handle
+    Get Fluxus Signature
+    External Clock
+    Internal Clock
+    Clock Gui
+ Sequencer
+ Control -> Table DnD
+ ControlList -> TableGui
+ Fluxus OSC Missing Controls => ControlList
+ Missing Controls Tab
+ Missing Controls Faders -> Default Values
+ Send OSC => Fluxus
+    Save Defaults Values
+    Update Controls
+    Update Triggers
+ Media Panel -> Defaults PopUp
+ Media Panel DnD
