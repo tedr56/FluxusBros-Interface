@@ -16,12 +16,13 @@ class MediaPanel(wx.Panel):
         toolbar.AddControl(combo)
         wx.EVT_COMBOBOX(self, TOOL_ID_COMBO, self.OnCombo)
         toolbar.Realize()
-        vbox.Add(toolbar, 0, wx.ALL | wx.ALIGN_LEFT | wx.EXPAND, 4 )
+        vbox.Add(toolbar, 0, wx.ALL, 4 )
         gridSizer = wx.GridSizer(rows=4, cols=4, hgap=5, vgap=5)
         for i in range(gridSizer.GetRows() * gridSizer.GetCols()):
-            gridSizer.Add(wx.StaticBitmap(self, wx.ID_ANY, bmp), 0, wx.EXPAND)
-        vbox.Add(gridSizer, proportion=1, flag=wx.EXPAND|wx.ALL)
+            gridSizer.Add(wx.StaticBitmap(self, wx.ID_ANY, bmp), 1, wx.EXPAND)
+        vbox.Add(gridSizer, proportion=1, flag=wx.EXPAND)
         self.SetSizer(vbox)
+
     def OnCombo(self, e):
         self.parent.SetPlayer(e)
 

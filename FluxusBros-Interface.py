@@ -22,6 +22,7 @@ class MyFrame(wx.Frame):
         self.InitMidi()
         self.InitPanels()
     def InitPanels(self):
+        vbox = wx.BoxSizer(wx.EXPAND|wx.VERTICAL)
         hbox = wx.BoxSizer(wx.EXPAND|wx.HORIZONTAL)
         self.Media = MediaPanel(self)
         self.Table = TablePanel(self)
@@ -29,7 +30,8 @@ class MyFrame(wx.Frame):
         hbox.Add(self.Media, flag=wx.EXPAND|wx.ALL)
         hbox.Add(self.Table, flag=wx.EXPAND|wx.ALL)
         hbox.Add(self.Sequencer, flag=wx.EXPAND|wx.ALL)
-        self.SetSizer(hbox)
+        vbox.Add(hbox, flag=wx.EXPAND|wx.ALL)
+        self.SetSizer(vbox)
     def InitMidi(self):
         self.MidiConnect = Connections(self.MidiInputRefresh)
     def MidiInputRefresh(self, data):
