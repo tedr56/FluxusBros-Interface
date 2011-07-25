@@ -16,7 +16,7 @@ class MediaPanel(wx.Panel):
         toolbar.AddControl(combo)
         wx.EVT_COMBOBOX(self, TOOL_ID_COMBO, self.OnCombo)
         toolbar.Realize()
-        vbox.Add(toolbar, 0, wx.ALL, 4 )
+        vbox.Add(toolbar, 0, wx.EXPAND)
         gridSizer = wx.GridSizer(rows=4, cols=4, hgap=5, vgap=5)
         for i in range(gridSizer.GetRows() * gridSizer.GetCols()):
             gridSizer.Add(wx.StaticBitmap(self, wx.ID_ANY, bmp), 1, wx.EXPAND)

@@ -2,6 +2,7 @@ import wx
 import rtmidi
 from CustomWidgets import wxFader
 from CustomWidgets import wxKnob
+from CustomWidgets import wxPiano
 from wx.lib.agw.knobctrl import *
 
 class TablePanel(wx.Panel):
@@ -24,18 +25,22 @@ class TablePanel(wx.Panel):
         hbox0.Add(self.knob2)
         hbox0.Add(self.knob3)
         hbox0.Add(self.knob4)
+        vbox.Add(hbox0, proportion=1, flag=wx.EXPAND|wx.ALL)
         hbox1 = wx.BoxSizer(wx.HORIZONTAL)
         self.fader1 = wxFader(self)
         self.fader2 = wxFader(self)
         self.fader3 = wxFader(self)
         self.fader4 = wxFader(self)
         self.Bind(wx.EVT_SCROLL, self.OnScrollChanged, self.fader1)
-        hbox1.Add(self.fader1, flag=wx.EXPAND|wx.ALL)
-        hbox1.Add(self.fader2, flag=wx.EXPAND|wx.ALL)
-        hbox1.Add(self.fader3, flag=wx.EXPAND|wx.ALL)
-        hbox1.Add(self.fader4, flag=wx.EXPAND|wx.ALL)
-        vbox.Add(hbox0, flag=wx.EXPAND|wx.ALL)
-        vbox.Add(hbox1, proportion=1, flag=wx.EXPAND|wx.ALL)
+        hbox1.Add(self.fader1, proportion=1, flag=wx.EXPAND|wx.ALL)
+        hbox1.Add(self.fader2, proportion=1, flag=wx.EXPAND|wx.ALL)
+        hbox1.Add(self.fader3, proportion=1, flag=wx.EXPAND|wx.ALL)
+        hbox1.Add(self.fader4, proportion=1, flag=wx.EXPAND|wx.ALL)
+        vbox.Add(hbox1, proportion=2, flag=wx.EXPAND|wx.ALL)
+        hbox2 = wx.BoxSizer(wx.HORIZONTAL)
+        self.piano = wxPiano(self)
+        hbox2.Add(self.piano,proportion = 1,flag=wx.EXPAND)
+        vbox.Add(hbox2,proportion=1, flag=wx.EXPAND)
         self.SetSizer(vbox)
     def OnKnobChanged(self, event):
         print("Knob!")

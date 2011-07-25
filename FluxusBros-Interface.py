@@ -18,19 +18,19 @@ class MyFrame(wx.Frame):
         self.InputCC = []
         self.InputNote = []
         self.InputOSC = []
-
         self.InitMidi()
         self.InitPanels()
+        
     def InitPanels(self):
-        vbox = wx.BoxSizer(wx.EXPAND|wx.VERTICAL)
-        hbox = wx.BoxSizer(wx.EXPAND|wx.HORIZONTAL)
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
         self.Media = MediaPanel(self)
         self.Table = TablePanel(self)
         self.Sequencer = SequencerPanel(self)
-        hbox.Add(self.Media, flag=wx.EXPAND|wx.ALL)
-        hbox.Add(self.Table, flag=wx.EXPAND|wx.ALL)
-        hbox.Add(self.Sequencer, flag=wx.EXPAND|wx.ALL)
-        vbox.Add(hbox, flag=wx.EXPAND|wx.ALL)
+        hbox.Add(self.Media, proportion = 0, flag=wx.EXPAND)
+        hbox.Add(self.Table, proportion = 1, flag=wx.EXPAND)
+        hbox.Add(self.Sequencer, proportion = 1, flag=wx.EXPAND)
+        vbox.Add(hbox, proportion=-1, flag=wx.EXPAND)
         self.SetSizer(vbox)
     def InitMidi(self):
         self.MidiConnect = Connections(self.MidiInputRefresh)
@@ -42,7 +42,7 @@ class MyFrame(wx.Frame):
         print data
         for m in data:
             self.MidiConnect.sendMessage(m)
-    def MidiDispatch(self, MidiData):
+    def MidiInDispatch(self, MidiData):
         if MidiData.isController():
             for C in self.InputCC:
                 if MidiData.isForChannel(C[0][0]):
@@ -68,7 +68,7 @@ class MyFrame(wx.Frame):
          
 class MyApp(wx.App):
     def OnInit(self, *args, **kwargs):
-        self.MainFrame = MyFrame(None, -1, "Midi Router/Sequencer")
+        self.MainFrame = MyFrame(None, -1, "FluxusBros Interface")
         self.MainFrame.Show(True)
         self.SetTopWindow(self.MainFrame)
         return True
