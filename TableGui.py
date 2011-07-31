@@ -47,7 +47,7 @@ class TablePanel(wx.Panel):
         #event_object = event.GetEventObject()
         #message = event_object.getValue()
         #print message
-        print event.GetValue()
+        #print event.GetValue()
     def OnScrollChanged(self, event):
         print("Scroll!")
         event_object = event.GetEventObject()

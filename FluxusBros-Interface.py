@@ -9,8 +9,8 @@ from MediaGui import MediaPanel
 from TableGui import TablePanel
 from SequencerGui import SequencerPanel
 
-APP_SIZE_X = 500
-APP_SIZE_Y = 200
+APP_SIZE_X = 900
+APP_SIZE_Y = 400
 
 class MyFrame(wx.Frame):
     def __init__(self, parent, ID, title):
