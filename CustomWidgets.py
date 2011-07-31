@@ -177,7 +177,7 @@ class wxPianoRoll(wx.Panel):
         note_offset = self.Notes[note_start]
         note_pos = self.octave_notes_pos[note % 12]
         note_octave = int(math.floor(num_note/12))
-        print note_octave
+        #print note_octave
         note_octave_pos = (note_octave * 7 * note_w) + (note_pos * note_w)
                 
 
@@ -230,10 +230,12 @@ class wxPianoRoll(wx.Panel):
             self.NoteOff(note, False)
     def NoteOn(self, note, play):
         self.Notes[note].NoteOn(play)
-        #wx.CallAfter(self.DrawOctaves,self.pDC)
+        self.DrawOctaves(self.pDC)
+        self.Refresh()
     def NoteOff(self, note, play):
         self.Notes[note].NoteOff(play)
-        #wx.CallAfter(self.DrawOctaves,self.pDC)
+        self.DrawOctaves(self.pDC)
+        self.Refresh()
         
 class wxPianoNote(Control):
     def __init__(self, parent, Id, octave, note):
@@ -286,6 +288,7 @@ class wxWhitePianoNote(wxPianoNote):
         self.pos = pos
         paint.SetPen(wx.Pen('BLACK'))
         if self.played:
+            print("RED NOTE")
             paint.SetBrush(wx.Brush('RED'))
         else:
             paint.SetBrush(wx.Brush('WHITE'))
