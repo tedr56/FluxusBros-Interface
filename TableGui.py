@@ -60,3 +60,4 @@ class TablePanel(wx.Panel):
         self.parent.SetControls(self.fader1.Update, self.fader1.GetInputs())
         self.parent.SetControls(self.fader2.Update, self.fader2.GetInputs())
         self.parent.SetControls(self.fader3.Update, self.fader3.GetInputs())
+        self.parent.SetControls(self.piano.Update, self.piano.GetInputs())

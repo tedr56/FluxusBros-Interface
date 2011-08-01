@@ -47,15 +47,16 @@ class MyFrame(wx.Frame):
             for C in self.InputCC:
                 if MidiData.isForChannel(C[0][0]):
                     if MidiData.getControllerNumber() == C[0][1]:
-                        C[1](value=MidiData.getControllerValue())
+                        C[1](input_type='cc', address=C[0], value=MidiData.getControllerValue())
         elif MidiData.isNoteOnOrOff():
             for N in self.InputNote:
                 if MidiData.isForChannel(N[0][0]):
                     if MidiData.getNoteNumber() == N[0][1]:
+                        print
                         if MidiData.isNoteOn():
-                            N[1](value=MidiData.getControllerValue())
+                            N[1](input_type='note', address=N[0], value=MidiData.getControllerValue())
                         else:
-                            N[1](value=0)
+                            N[1](input_type='note', address=N[0], value=0)
     def SetControls(self, Callback, Inputs):
         for CCin in Inputs['CC']:
             self.InputCC.append([CCin, Callback])

@@ -4,11 +4,9 @@ import rtmidi
 
 class Control(wx.Object):
     def __init__(self, *args, **kwargs):
-        #wx.EvtHandler.__init__(self,*args, **kwargs)
         self.InputCC = []
         self.InputNote = []
         self.InputOSC = []
-        #self.Bind(wx.EVT_RIGHT_DOWN, self.OnRightDown)
     def OnRightDown(self,event):
         self.PopupMenu(ControlContextMenu(self), event.GetPosition())
     def SetControl(self):
@@ -103,10 +101,15 @@ class wxPiano(wx.Panel):
         vbox.Add(hbox0, proportion=0, flag=wx.EXPAND)
         hbox1 = wx.BoxSizer(wx.HORIZONTAL)
         ID_PIANO_ROLL = wx.NewId()
-        pianoroll=wxPianoRoll(parent=self, id=ID_PIANO_ROLL)
-        hbox1.Add(pianoroll, proportion=1, flag=wx.EXPAND|wx.ALL)
+        self.pianoroll=wxPianoRoll(parent=self, id=ID_PIANO_ROLL)
+        hbox1.Add(self.pianoroll, proportion=1, flag=wx.EXPAND|wx.ALL)
         vbox.Add(hbox1, proportion=3, flag=wx.EXPAND)
         self.SetSizer(vbox)
+    def GetInputs(self):
+        return self.pianoroll.GetInputs()
+    def Update(self, input_type='Note', address=[0,0], value=0):
+        self.pianoroll.Update(input_type, address, value)
+    
         
 class wxPianoRoll(wx.Panel):
     def __init__(self, *args, **kwargs):
@@ -122,6 +125,8 @@ class wxPianoRoll(wx.Panel):
         self.first_note_on_screen = 0
         self.before_notes_on_screen = 0
         self.Notes = []
+        self.DefaultMidiChannel=1
+        self.FirstMidiNote=12
         #self.SetBackgroundColour("BLACK")
         self.pDC = wx.PseudoDC()
         self.InitNotes(self.pDC)
@@ -133,16 +138,20 @@ class wxPianoRoll(wx.Panel):
         self.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
 
     def InitNotes(self, dc):
+        midichannel = self.DefaultMidiChannel
         for i in range((self.octaves * 12) + self.after_notes):
             octave = int(math.floor (i/12))
             note = i % 12
+            midinote = i + self.FirstMidiNote
             if 'w' == self.octave_notes[i % len(self.octave_notes)]:
                 noteid = wx.NewId()
                 whitenote = wxWhitePianoNote(self, noteid, octave, note)
+                whitenote.SetInput(input_type = 'Note', address = [midichannel,midinote,i])
                 self.Notes.append(whitenote)
             elif 'b' == self.octave_notes[i % len(self.octave_notes)]:
                 noteid = wx.NewId()
                 blacknote = wxBlackPianoNote(self, noteid, octave, note)
+                blacknote.SetInput(input_type = 'Note', address = [midichannel,midinote,i])
                 self.Notes.append(blacknote)
         self.DrawOctaves(dc)
 
@@ -151,11 +160,10 @@ class wxPianoRoll(wx.Panel):
         return range(self.first_note_on_screen,last_note_on_screen)
 
     def DrawOctaves(self, dc):
-        print("Draw Octaves")
-        dc.RemoveAll()
-        dc.BeginDrawing()
         notes_to_draw = self.GetNotesToDraw()
         notes_on_screen = len(notes_to_draw)
+        dc.RemoveAll()
+        dc.BeginDrawing()
         for n in range(len(notes_to_draw)):
             if self.Notes[notes_to_draw[n]].GetColor() == 'w':
                 self.DrawNote(dc, notes_to_draw[n], n)
@@ -178,19 +186,26 @@ class wxPianoRoll(wx.Panel):
         note_pos = self.octave_notes_pos[note % 12]
         note_octave = int(math.floor(num_note/12))
         #print note_octave
-        note_octave_pos = (note_octave * 7 * note_w) + (note_pos * note_w)
+        note_octave_pos = int(math.floor((note_octave * 7 * note_w) + (note_pos * note_w)))
                 
 
         note_point = wx.Point(note_octave_pos,0)
         note_size  = wx.Size (note_w, note_h)
         dc.SetId(note_id)
 
-        self.Notes[note].Update(dc, note_point, note_size)
+        self.Notes[note].UpdateDC(dc, note_point, note_size)
+        note_coord = self.Notes[note].GetPos()
+        note_x = note_coord[0]
+        note_y = note_coord[1]
+        #print("Coord: %i %i" % (note_x,note_y))
         note_size = self.Notes[note].GetSize()
         note_height = note_size.GetHeight()
         note_width = note_size.GetWidth()
-        note_rect  = wx.Rect (note_octave_pos, 0, note_width, note_height)        
+        #print("Size : %i %i" % (note_width, note_height))
+        note_rect  = wx.Rect (note_x, note_y, note_width, note_height)        
         dc.SetIdBounds(note_id, note_rect)
+        #print dc.GetLen()
+        #print dc.GetIdBounds(note_id)
 
     def OnPaint(self, event):
         w, h = self.GetSize()
@@ -211,23 +226,27 @@ class wxPianoRoll(wx.Panel):
     def FindNote(self, event):
         hitradius = 1
         x , y = event.GetPositionTuple()
-        l = self.pDC.FindObjects(x, y, hitradius)
+        #l = self.pDC.FindObjects(x, y, hitradius)
+        l = self.pDC.FindObjectsByBBox(x, y)
         if l:
             first_note_detected = l[0]
             num_note = self.SearchNoteId(first_note_detected)
+            print num_note
             return num_note
+        else:
+            return None
     def OnRightDown(self,event):
         note = self.FindNote(event)
-        if note:
+        if not note == None:
             self.Notes[note].OnRightDown(event)
     def OnLeftDown(self,event):
         note = self.FindNote(event)
-        if note:
-            self.NoteOn(note, False)
+        if not note == None:
+            self.NoteOn(note, True)
     def OnLeftUp(self,event):
         note = self.FindNote(event)
-        if note:
-            self.NoteOff(note, False)
+        if not note == None:
+            self.NoteOff(note, True)
     def NoteOn(self, note, play):
         self.Notes[note].NoteOn(play)
         self.DrawOctaves(self.pDC)
@@ -236,11 +255,34 @@ class wxPianoRoll(wx.Panel):
         self.Notes[note].NoteOff(play)
         self.DrawOctaves(self.pDC)
         self.Refresh()
-        
+
+    def GetInputs(self):
+        inputs=dict()
+        for n in self.Notes:
+            #print n.GetInputs()
+            for k,v in n.GetInputs().iteritems():
+                #print i
+                if inputs.has_key(k):
+                    inputs[k] = v+inputs[k]
+                else:
+                    inputs[k] = v
+        #print inputs
+        return inputs
+            
+    def Update(self, input_type='Note', address=[0,0], value=0):
+        if len(address) > 2:
+            print address
+            num_note = address[2]
+            note = self.Notes[num_note]
+            note.Update(input_type, address, value)
+            self.DrawOctaves(self.pDC)
+            self.Refresh()
+
 class wxPianoNote(Control):
     def __init__(self, parent, Id, octave, note):
         Control.__init__(self)
         self.id = Id
+        
         self.parent = parent
         self.octave = octave
         self.note = note
@@ -254,7 +296,7 @@ class wxPianoNote(Control):
         return self.id
     def SetControl(self):
         print("Set Control Event Note")
-    def Update(self, paint, pos, size):
+    def UpdateDC(self, paint, pos, size):
         self.DrawNote(paint)
     def DrawNote(self, paint):
         paint.DrawRectanglePointSize(self.pos,self.size)
@@ -279,16 +321,19 @@ class wxPianoNote(Control):
     def NoteOff(self, play):  #Parametre play a True => Send Midi Message Note Off
         print("Note Off : %i %i" % (self.note, self.octave))
         self.played = False
-    
+    def Update(self, input_type='Note', address=[0,0], value=0):
+        if value == 0:
+            self.NoteOff(False)
+        else:
+            self.NoteOn(False)
 class wxWhitePianoNote(wxPianoNote):
     def __init__(self, parent, ID, octave, note):
         wxPianoNote.__init__(self, parent, ID, octave, note)
-    def Update(self, paint, pos, size):
+    def UpdateDC(self, paint, pos, size):
         self.size = size
         self.pos = pos
         paint.SetPen(wx.Pen('BLACK'))
         if self.played:
-            print("RED NOTE")
             paint.SetBrush(wx.Brush('RED'))
         else:
             paint.SetBrush(wx.Brush('WHITE'))
@@ -299,7 +344,7 @@ class wxWhitePianoNote(wxPianoNote):
 class wxBlackPianoNote(wxPianoNote):
     def __init__(self, parent, ID, octave, note):
         wxPianoNote.__init__(self, parent, ID, octave, note)
-    def Update(self, paint, pos, size):
+    def UpdateDC(self, paint, pos, size):
         self.size = wx.Size(size[0], size[1] * 0.6)
         self.pos = pos
         new_size = [size[0], size[1] * 0.6]

@@ -9,11 +9,13 @@ FluxusInClient = "FluxusMidi Input Client"
 FluxusInPort = "FluxusMidi Input Client:0"
 MicroKontrol_Out_Client = "microKontrol"
 MicroKontrol_Out_Port = "microKONTROL:1"
+VirtualKeyboard_Port = "Virtual Keyboard:0"
+
 
 #Class to manage MIDI Connections
 class Connections:
     def __init__(self, callback):
-        self.midi_client_name = "FluxusBros-Sequencer"
+        self.midi_client_name = "FluxusBros-Interface"
         self.midi_in_port_name = "fluxusbros-in"
         self.midi_out_port_name = "fluxusbros-out"
         self.MidiIn = rtmidi.RtMidiIn(self.midi_client_name)
@@ -30,6 +32,7 @@ class Connections:
         self.port_in_wishes = []
         self.port_out_wishes = []
         
+        self.add_in_port_wish(VirtualKeyboard_Port)
         self.add_in_port_wish(MicroKontrol_Out_Port)
         self.add_out_port_wish(FluxusInPort)
         self.refresh_connections()
