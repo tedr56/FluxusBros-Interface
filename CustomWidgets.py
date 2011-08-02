@@ -379,7 +379,7 @@ class wxBlackPianoNote(wxPianoNote):
         return 'b'
 
 class wxClock(wx.Panel, Control):
-    def __init__(self, parent, signature=[4,4], beats_per_bar=4, ticks_per_beat = 25):
+    def __init__(self, parent, signature=[4,4], beats_per_bar=4, ticks_per_beat = 24):
         self.parent = parent
         wx.Panel.__init__(self, parent)
         Control.__init__(self)
