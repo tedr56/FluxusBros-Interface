@@ -56,7 +56,7 @@ class Connections:
 #            print("\n")
 #            decoded_DataRaw = list(hex(ord (i)) for i in data.getRawData())
 #            return str("%s\n" % decoded_DataRaw)
-        print list(hex(ord (i)) for i in data.getRawData())
+        #print list(hex(ord (i)) for i in data.getRawData())
         return data
             
     def refresh_connections(self):

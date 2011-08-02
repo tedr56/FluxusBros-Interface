@@ -1,12 +1,15 @@
 import wx
 from wx.lib.agw.knobctrl import *
+
 import rtmidi
 
 class Control(wx.Object):
     def __init__(self, *args, **kwargs):
-        self.InputCC = []
-        self.InputNote = []
-        self.InputOSC = []
+        self.InputCC    = []
+        self.InputNote  = []
+        self.InputSysEx = []
+        self.InputOSC   = []
+        self.InputClock = []
     def OnRightDown(self,event):
         self.PopupMenu(ControlContextMenu(self), event.GetPosition())
     def SetControl(self):
@@ -18,14 +21,22 @@ class Control(wx.Object):
             self.SetMidiNoteInput(address, option)
         elif input_type=='OSC' or input_type=='osc':
             self.SetOSCInput(address, option)
+        elif input_type=='SysEx':
+            self.SetMidiSysExInput(address)
+        elif input_type=='clock' or input_type=='Clock':
+            self.SetMidiClockInput()
     def SetMidiCCInput(self, address, option=None):
         self.InputCC.append(address)
     def SetMidiNoteInput(self, address, option=None):
         self.InputNote.append(address)
-    def SetMidiOSCInput(self, address, option=None):
+    def SetOSCInput(self, address, option=None):
         self.InputOSC.append(address)
+    def SetMidiClockInput(self):
+        self.InputClock.append(0x48)
+    def SetMidiSysExInput(self,address):
+        self.InputSysEx.append(address)
     def GetInputs(self):
-        inputs= {'CC': self.GetMidiCCInputs(), 'Note':self.GetMidiNoteInputs(), 'OSC':self.GetMidiOSCInputs()}
+        inputs= {'CC': self.GetMidiCCInputs(), 'Note':self.GetMidiNoteInputs(), 'OSC':self.GetMidiOSCInputs(), 'SysEx':self.GetMidiSysExInputs(), 'Clock':self.GetMidiClockInputs()}
         return inputs
     def GetMidiCCInputs(self):
         return self.InputCC
@@ -33,6 +44,10 @@ class Control(wx.Object):
         return self.InputNote
     def GetMidiOSCInputs(self):
         return self.InputOSC
+    def GetMidiSysExInputs(self):
+        return self.InputSysEx
+    def GetMidiClockInputs(self):
+        return self.InputClock
     
 class ControlContextMenu(wx.Menu):
     def __init__(self, parent):
@@ -45,7 +60,13 @@ class ControlContextMenu(wx.Menu):
     def OnSetControl(self, event):
         self.parent.SetControl()
  
-            
+class wxMidiPanel(wx.Panel):
+    def __init__(self, *args, **kwargs):
+        wx.Panel.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+    def SetControls(self, Callback, Inputs):
+        self.parent.SetControls(Callback, Inputs)
+   
 class wxFader(wx.Slider, Control):
     def __init__(self, *args, **kwargs):
         wx.Slider.__init__(self, *args, style = wx.SL_AUTOTICKS |  wx.SL_VERTICAL | wx.SL_LABELS | wx.SL_INVERSE, **kwargs)
@@ -271,7 +292,6 @@ class wxPianoRoll(wx.Panel):
             
     def Update(self, input_type='Note', address=[0,0], value=0):
         if len(address) > 2:
-            print address
             num_note = address[2]
             note = self.Notes[num_note]
             note.Update(input_type, address, value)
@@ -358,3 +378,38 @@ class wxBlackPianoNote(wxPianoNote):
     def GetColor(self):
         return 'b'
 
+class wxClock(wx.Panel, Control):
+    def __init__(self, parent, signature=[4,4], beats_per_bar=4, ticks_per_beat = 25):
+        self.parent = parent
+        wx.Panel.__init__(self, parent)
+        Control.__init__(self)
+        self.BeatsLights = []
+        self.BeatsPerBar = beats_per_bar
+        self.Beat = 0
+        self.TickPerBeat = ticks_per_beat
+        self.Tick = 0
+        self.InitUI()
+        self.InitClock()
+    def InitUI(self):
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        for b in range(self.BeatsPerBar):
+            print b
+            ID_N = wx.NewId()
+            light = wx.Panel(self, ID_N, size=wx.Size(10,10))
+            light.SetBackgroundColour(wx.Colour(10, b * 50, 120))
+            self.BeatsLights.append(light)
+            hbox.Add(light, 0, wx.ALL, 2)
+        self.SetSizer(hbox)
+    def InitClock(self):
+        self.SetInput('Clock',['0xf8'])
+    def Update(self, input_type='cc', address=[0,0], value=0):
+        self.Tick += 1
+        if self.Tick >= self.TickPerBeat:
+            self.Tick = 0
+            self.AddBeat()
+    def AddBeat(self):
+        self.BeatsLights[self.Beat].SetBackgroundColour('BLACK')
+        self.Beat += 1
+        if self.Beat >= len(self.BeatsLights):
+            self.Beat = 0
+        self.BeatsLights[self.Beat].SetBackgroundColour('GREEN')

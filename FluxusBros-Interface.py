@@ -15,12 +15,14 @@ APP_SIZE_Y = 400
 class MyFrame(wx.Frame):
     def __init__(self, parent, ID, title):
         wx.Frame.__init__(self, parent, ID, title, wx.DefaultPosition, wx.Size(APP_SIZE_X, APP_SIZE_Y))
-        self.InputCC = []
-        self.InputNote = []
-        self.InputOSC = []
+        self.InputCC    = []
+        self.InputNote  = []
+        self.InputOSC   = []
+        self.InputSysEx = []
+        self.InputClock = []
         self.InitMidi()
         self.InitPanels()
-        
+
     def InitPanels(self):
         vbox = wx.BoxSizer(wx.VERTICAL)
         hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -52,11 +54,25 @@ class MyFrame(wx.Frame):
             for N in self.InputNote:
                 if MidiData.isForChannel(N[0][0]):
                     if MidiData.getNoteNumber() == N[0][1]:
-                        print
+                        #print
                         if MidiData.isNoteOn():
                             N[1](input_type='note', address=N[0], value=MidiData.getControllerValue())
                         else:
                             N[1](input_type='note', address=N[0], value=0)
+        elif MidiData.isSysEx():
+            for S in self.InputSysEx:
+                print("SysEx")
+                print S
+                S[1](MidiData.getSysExData())
+        elif self.IsClockEvent(MidiData):
+            for C in self.InputClock:
+                C[1]()
+    def IsClockEvent(self, data):
+        decoded_data = ord(data.getRawData()[0])
+        if decoded_data == 248:     #clock raw data = 248(10) F8(16)
+            return True
+        else:
+            return False
     def SetControls(self, Callback, Inputs):
         for CCin in Inputs['CC']:
             self.InputCC.append([CCin, Callback])
@@ -64,6 +80,11 @@ class MyFrame(wx.Frame):
             self.InputNote.append([Notein, Callback])
         for OSCin in Inputs['OSC']:
             self.InputOSC.append([OSCin, Callback])
+        for SysExin in Inputs['SysEx']:
+            self.InputSysEx.append([SysExin, Callback])
+        for Clockin in Inputs['Clock']:
+            self.InputClock.append([Clockin, Callback])
+
     def SetPlayer(self, event):
         print("New Player : %s" % event.GetEventObject().GetValue())
          
