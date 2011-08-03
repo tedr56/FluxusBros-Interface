@@ -8,6 +8,7 @@ from MidiConnectionsRtMidi import Connections
 from MediaGui import MediaPanel
 from TableGui import TablePanel
 from SequencerGui import SequencerPanel
+#from config import Config
 
 APP_SIZE_X = 900
 APP_SIZE_Y = 400
@@ -66,7 +67,7 @@ class MyFrame(wx.Frame):
                 S[1](MidiData.getSysExData())
         elif self.IsClockEvent(MidiData):
             for C in self.InputClock:
-                C[1](ord(MidiData.getRawData()[0]))
+                C[1](address=ord(MidiData.getRawData()[0]))
     def IsClockEvent(self, data):
         #Clock Raw Data
         #clock tick     = 248(10) F8(16)

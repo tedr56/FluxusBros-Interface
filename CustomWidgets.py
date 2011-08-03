@@ -410,7 +410,7 @@ class wxClock(wx.Panel, Control):
         self.SetSizer(hbox)
     def InitClock(self):
         self.SetInput('Clock',['0xf8'])
-    def Update(self, address=248):
+    def Update(self, input_type='Clock', address=248, value=1):
         if address == 248 and not self.stopped:
             self.AddTick()
         elif address == 252:
