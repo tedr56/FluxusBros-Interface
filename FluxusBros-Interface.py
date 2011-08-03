@@ -8,22 +8,42 @@ from MidiConnectionsRtMidi import Connections
 from MediaGui import MediaPanel
 from TableGui import TablePanel
 from SequencerGui import SequencerPanel
-#from config import Config
+import ConfigParser
 
 APP_SIZE_X = 900
 APP_SIZE_Y = 400
 
 class MyFrame(wx.Frame):
     def __init__(self, parent, ID, title):
-        wx.Frame.__init__(self, parent, ID, title, wx.DefaultPosition, wx.Size(APP_SIZE_X, APP_SIZE_Y))
+        self.InitConfig(parent, ID, title)
+        #wx.Frame.__init__(self, parent, ID, title, wx.DefaultPosition, wx.Size(APP_SIZE_X, APP_SIZE_Y))
         self.InputCC    = []
         self.InputNote  = []
         self.InputOSC   = []
         self.InputSysEx = []
         self.InputClock = []
+
         self.InitMidi()
         self.InitPanels()
 
+    def InitConfig(self, parent, ID, title):
+        self.cfg = ConfigParser.ConfigParser()
+        f = "./config.cfg"
+        self.cfg.read(f)
+        #if self.cfg.getint('App', 'width') and self.cfg.getint('App', 'height'):
+        if self.cfg.has_section('App'):
+            print("Config")
+            w, h = self.cfg.getint('App', 'width'), self.cfg.getint('App', 'height')
+        else:
+            print("Default")
+            w, h = (APP_SIZE_X, APP_SIZE_Y)
+            self.cfg.add_section('App')
+            self.cfg.set('App' , 'width', w)
+            self.cfg.set('App' , 'height', h)
+            self.cfg.write(open(f,"w"))
+        wx.Frame.__init__(self, parent, ID, title, wx.DefaultPosition, wx.Size(w, h))
+
+        
     def InitPanels(self):
         vbox = wx.BoxSizer(wx.VERTICAL)
         hbox = wx.BoxSizer(wx.HORIZONTAL)
