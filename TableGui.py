@@ -1,11 +1,12 @@
 import wx
 import rtmidi
+from CustomWidgets import wxMidiPanel
 from CustomWidgets import wxFader
 from CustomWidgets import wxKnob
 from CustomWidgets import wxPiano
 from wx.lib.agw.knobctrl import *
 
-class TablePanel(wx.Panel):
+class TablePanel(wxMidiPanel):
     def __init__(self, *args, **kwargs):
         wx.Panel.__init__(self, *args, **kwargs)
         self.parent = args[0]
@@ -19,7 +20,6 @@ class TablePanel(wx.Panel):
         self.knob2 = wxKnob(self)
         self.knob3 = wxKnob(self)
         self.knob4 = wxKnob(self)
-        print self.knob1.GetMaxValue()
         self.Bind(EVT_KC_ANGLE_CHANGING, self.OnKnobChanged, self.knob1)
         hbox0.Add(self.knob1)
         hbox0.Add(self.knob2)
@@ -31,7 +31,6 @@ class TablePanel(wx.Panel):
         self.fader2 = wxFader(self)
         self.fader3 = wxFader(self)
         self.fader4 = wxFader(self)
-        self.Bind(wx.EVT_SCROLL, self.OnScrollChanged, self.fader1)
         hbox1.Add(self.fader1, proportion=1, flag=wx.EXPAND|wx.ALL)
         hbox1.Add(self.fader2, proportion=1, flag=wx.EXPAND|wx.ALL)
         hbox1.Add(self.fader3, proportion=1, flag=wx.EXPAND|wx.ALL)
@@ -39,20 +38,25 @@ class TablePanel(wx.Panel):
         vbox.Add(hbox1, proportion=2, flag=wx.EXPAND|wx.ALL)
         hbox2 = wx.BoxSizer(wx.HORIZONTAL)
         self.piano = wxPiano(self)
+        self.Bind(wx.EVT_MOUSE_EVENTS, self.OnPianoChanged, self.piano)
         hbox2.Add(self.piano,proportion = 1,flag=wx.EXPAND)
         vbox.Add(hbox2,proportion=1, flag=wx.EXPAND)
         self.SetSizer(vbox)
+
+        
     def OnKnobChanged(self, event):
         print("Knob!")
         #event_object = event.GetEventObject()
         #message = event_object.getValue()
         #print message
         #print event.GetValue()
-    def OnScrollChanged(self, event):
-        print("Scroll!")
+
+    def OnPianoChanged(self, event):
+        print ("Note!!")
         event_object = event.GetEventObject()
         message = event_object.getMessage()
         self.parent.MidiOutputRefresh(message)
+        
     def InitControls(self):
         self.fader1.SetInput(input_type = 'CC', address = [2,24])
         self.fader2.SetInput(input_type = 'CC', address = [2,25])

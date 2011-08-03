@@ -32,10 +32,10 @@ class MyFrame(wx.Frame):
         self.cfg.read(f)
         #if self.cfg.getint('App', 'width') and self.cfg.getint('App', 'height'):
         if self.cfg.has_section('App'):
-            print("Config")
+            print("Config File")
             w, h = self.cfg.getint('App', 'width'), self.cfg.getint('App', 'height')
         else:
-            print("Default")
+            print("Default Config")
             w, h = (APP_SIZE_X, APP_SIZE_Y)
             self.cfg.add_section('App')
             self.cfg.set('App' , 'width', w)

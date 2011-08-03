@@ -5,12 +5,18 @@ import rtmidi
 
 MIDI_CLOCK_TICK = 0x48
 class Control(wx.Object):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, GetControlValue=None, InitValue=0):
         self.InputCC    = []
         self.InputNote  = []
         self.InputSysEx = []
         self.InputOSC   = []
         self.InputClock = []
+        if GetControlValue == None:
+            self.getvalue = self.NoGetValue
+        else:
+            self.getvalue = GetControlValue
+    def NoGetValue(self):
+        return 0
     def OnRightDown(self,event):
         self.PopupMenu(ControlContextMenu(self), event.GetPosition())
     def SetControl(self):
@@ -49,7 +55,33 @@ class Control(wx.Object):
         return self.InputSysEx
     def GetMidiClockInputs(self):
         return self.InputClock
-    
+    def GetControlValue(self):
+        return self.getvalue()
+    def getMessage(self):
+        msg = []
+        value = self.GetControlValue()
+        
+        if self.InputCC:
+            print("Input CC")
+            print self.InputCC
+            for c in self.InputCC:
+                messageCC = rtmidi.MidiMessage().controllerEvent(c[0] , c[1], value)
+                msg.append(messageCC)
+        else:
+            print("No input CC")
+        #if self.InputNote:
+        #    print("Input Note")
+        #    print self.InputNote        
+        #    for n in self.InputNote:
+        #        if value:
+        #            messageNote = rtmidi.MidiMessage().noteOn(n[0] , n[1], value)
+        #        else:
+        #            messageNote = rtmidi.MidiMessage().noteOff(n[0] , n[1])
+        #        msg.append(messageNote)
+        #else:
+        #    print("No input Note")
+        #print value
+        return msg
 class ControlContextMenu(wx.Menu):
     def __init__(self, parent):
         wx.Menu.__init__(self)
@@ -67,30 +99,27 @@ class wxMidiPanel(wx.Panel):
         self.parent = parent
     def SetControls(self, Callback, Inputs):
         self.parent.SetControls(Callback, Inputs)
-   
+    def OnMessage(self, message):
+        self.parent.MidiOutputRefresh, message
+        
 class wxFader(wx.Slider, Control):
     def __init__(self, *args, **kwargs):
         wx.Slider.__init__(self, *args, style = wx.SL_AUTOTICKS |  wx.SL_VERTICAL | wx.SL_LABELS | wx.SL_INVERSE, **kwargs)
-        Control.__init__(self)
+        Control.__init__(self, GetControlValue=self.GetValue)
+        self.parent = args[0]
         self.SetRange(0, 127)
         self.Bind(wx.EVT_RIGHT_DOWN, self.OnRightDown)
+        self.Bind(wx.EVT_COMMAND_SCROLL, self.OnScrolled)
     def OnRightDown(self,event):
         self.PopupMenu(ControlContextMenu(self), event.GetPosition())
     def Update(self, input_type='cc', address=[0,0], value=0):
         self.SetValue(value)
-    def getMessage(self):
-        messages = []
-        #Controls Event : Type = 0x18
-        for c in self.InputCC:
-            messageCC = rtmidi.MidiMessage()
-            messageCC.controllerEvent(c[0] , c[1], self.GetValue())
-            messages.append(messageCC)
-        return messages
+    def OnScrolled(self, event):
+        self.parent.OnMessage(self.getMessage())
         
 class wxCrossFader(wxFader):
     def __init__(self, *args, **kwargs):
         wxFader.__init__(self, *args, style = wx.SL_AUTOTICKS |  wx.SL_HORIZONTAL | wx.SL_LABELS | wx.SL_INVERSE, **kwargs)
-        self.SetRange(0, 127)
 
 class wxKnob(KnobCtrl, Control):
     def __init__(self, parent, id=-1, size=(20, 20)):
@@ -131,7 +160,8 @@ class wxPiano(wx.Panel):
         return self.pianoroll.GetInputs()
     def Update(self, input_type='Note', address=[0,0], value=0):
         self.pianoroll.Update(input_type, address, value)
-    
+    def getMessage(self):
+        print("piano getmessage")
         
 class wxPianoRoll(wx.Panel):
     def __init__(self, *args, **kwargs):
@@ -253,7 +283,6 @@ class wxPianoRoll(wx.Panel):
         if l:
             first_note_detected = l[0]
             num_note = self.SearchNoteId(first_note_detected)
-            print num_note
             return num_note
         else:
             return None
@@ -401,7 +430,6 @@ class wxClock(wx.Panel, Control):
     def InitUI(self):
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         for b in range(self.BeatsPerBar):
-            print b
             ID_N = wx.NewId()
             light = wx.Panel(self, ID_N, size=wx.Size(10,10))
             light.SetBackgroundColour(wx.Colour(10, b * 50, 120))
