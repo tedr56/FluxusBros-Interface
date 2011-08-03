@@ -8,9 +8,9 @@ TODOS
  Load Defaults Control Values
  Hook Mode
  Graphic Class (Sequencer)
- Clock Handle
+*Clock Handle
     Get Fluxus Signature
-    External Clock
+*   External Clock
     Internal Clock
     Clock Gui
  Sequencer

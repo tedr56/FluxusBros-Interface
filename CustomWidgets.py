@@ -3,6 +3,7 @@ from wx.lib.agw.knobctrl import *
 
 import rtmidi
 
+MIDI_CLOCK_TICK = 0x48
 class Control(wx.Object):
     def __init__(self, *args, **kwargs):
         self.InputCC    = []
@@ -24,14 +25,14 @@ class Control(wx.Object):
         elif input_type=='SysEx':
             self.SetMidiSysExInput(address)
         elif input_type=='clock' or input_type=='Clock':
-            self.SetMidiClockInput()
+            self.SetMidiClockInput(address)
     def SetMidiCCInput(self, address, option=None):
         self.InputCC.append(address)
     def SetMidiNoteInput(self, address, option=None):
         self.InputNote.append(address)
     def SetOSCInput(self, address, option=None):
         self.InputOSC.append(address)
-    def SetMidiClockInput(self):
+    def SetMidiClockInput(self, address):
         self.InputClock.append(0x48)
     def SetMidiSysExInput(self,address):
         self.InputSysEx.append(address)
@@ -388,8 +389,15 @@ class wxClock(wx.Panel, Control):
         self.Beat = 0
         self.TickPerBeat = ticks_per_beat
         self.Tick = 0
+        self.stopped = 0
         self.InitUI()
         self.InitClock()
+                #Clock Raw Data
+        #clock tick     = 248(10) F8(16)
+        #clock stop     = 252(10) FC(16)
+        #clock start    = 250(10) FA(16)
+        #clock continue = 251(10) FB(16)
+
     def InitUI(self):
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         for b in range(self.BeatsPerBar):
@@ -402,7 +410,21 @@ class wxClock(wx.Panel, Control):
         self.SetSizer(hbox)
     def InitClock(self):
         self.SetInput('Clock',['0xf8'])
-    def Update(self, input_type='cc', address=[0,0], value=0):
+    def Update(self, address=248):
+        if address == 248 and not self.stopped:
+            self.AddTick()
+        elif address == 252:
+            self.stopped = 1
+        elif address == 250:
+            self.stopped = 0
+            self.Beat = 0
+            self.Tick = 0
+            for b in self.BeatsLights:
+                b.SetBackgroundColour('BLACK')
+            self.BeatsLights[0].SetBackgroundColour('GREEN')
+        elif address == 251:
+            self.stopped = 0
+    def AddTick(self):
         self.Tick += 1
         if self.Tick >= self.TickPerBeat:
             self.Tick = 0

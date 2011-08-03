@@ -66,11 +66,16 @@ class MyFrame(wx.Frame):
                 S[1](MidiData.getSysExData())
         elif self.IsClockEvent(MidiData):
             for C in self.InputClock:
-                C[1]()
+                C[1](ord(MidiData.getRawData()[0]))
     def IsClockEvent(self, data):
+        #Clock Raw Data
+        #clock tick     = 248(10) F8(16)
+        #clock stop     = 252(10) FC(16)
+        #clock start    = 250(10) FA(16)
+        #clock continue = 251(10) FB(16)
         decoded_data = ord(data.getRawData()[0])
-        if decoded_data == 248:     #clock raw data = 248(10) F8(16)
-            return True
+        if decoded_data in [248,250,251,252]:
+            return decoded_data
         else:
             return False
     def SetControls(self, Callback, Inputs):
