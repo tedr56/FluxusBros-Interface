@@ -1,11 +1,12 @@
 import wx
 from wx.lib.agw.knobctrl import *
-
+from MessageDispatch import *
 import rtmidi
 
 MIDI_CLOCK_TICK = 0x48
-class Control(wx.Object):
-    def __init__(self, GetControlValue=None, InitValue=0):
+class Control(wx.PyControl):
+    def __init__(self, parent, GetControlValue=None, InitValue=0):
+        wx.PyControl.__init__(self, parent)
         self.InputCC    = []
         self.InputNote  = []
         self.InputSysEx = []
@@ -22,6 +23,7 @@ class Control(wx.Object):
     def SetControl(self):
         print("Set Control")
     def SetInput(self, input_type='CC', address=[0,0], option = None):
+        wx.PostEvent(self, MessageRecord(self, input_type, address, option))
         if input_type=='CC' or input_type=='cc':
             self.SetMidiCCInput(address, option)
         elif input_type=='note' or input_type=='Note':
@@ -97,16 +99,12 @@ class wxMidiPanel(wx.Panel):
     def __init__(self, *args, **kwargs):
         wx.Panel.__init__(self, parent, *args, **kwargs)
         self.parent = parent
-    def SetControls(self, Callback, Inputs):
-        self.parent.SetControls(Callback, Inputs)
-    def OnMessage(self, message):
-        self.parent.MidiOutputRefresh, message
         
-class wxFader(wx.Slider, Control):
-    def __init__(self, *args, **kwargs):
-        wx.Slider.__init__(self, *args, style = wx.SL_AUTOTICKS |  wx.SL_VERTICAL | wx.SL_LABELS | wx.SL_INVERSE, **kwargs)
-        Control.__init__(self, GetControlValue=self.GetValue)
+class wxFader(wx.Slider):
+    def __init__(self, *args,  **kwargs):
         self.parent = args[0]
+        self.FaderId = args[1]
+        wx.Slider.__init__(self, *args, style = wx.SL_AUTOTICKS |  wx.SL_VERTICAL | wx.SL_LABELS | wx.SL_INVERSE, **kwargs)
         self.SetRange(0, 127)
         self.Bind(wx.EVT_RIGHT_DOWN, self.OnRightDown)
         self.Bind(wx.EVT_COMMAND_SCROLL, self.OnScrolled)
@@ -116,16 +114,21 @@ class wxFader(wx.Slider, Control):
         self.SetValue(value)
     def OnScrolled(self, event):
         self.parent.OnMessage(self.getMessage())
+    def SetInput(self, input_type='CC', address=[0,0], option = None):
+        wx.PostEvent(self, MessageRecord(self, self.FaderId, input_type, address, option))
+    def UnSetInput(self, input_type='CC', address=[0,0], option = None):
+        wx.PostEvent(self, MessageUnRecord(self, self.FaderId, input_type, address, option))
+    def GetInputs(self):
+        wx.PostEvent(self, MessageGet(self))
         
 class wxCrossFader(wxFader):
     def __init__(self, *args, **kwargs):
         wxFader.__init__(self, *args, style = wx.SL_AUTOTICKS |  wx.SL_HORIZONTAL | wx.SL_LABELS | wx.SL_INVERSE, **kwargs)
 
-class wxKnob(KnobCtrl, Control):
+class wxKnob(KnobCtrl):
     def __init__(self, parent, id=-1, size=(20, 20)):
         #KnobCtrl.__init__(self, *args, **kwargs)
         KnobCtrl.__init__(self, parent, id, size)
-        Control.__init__(self)
         self.SetTags(range(0,127,1))
         self.SetAngularRange(-45, 225)
         self.SetValue(45)
@@ -328,11 +331,10 @@ class wxPianoRoll(wx.Panel):
             self.DrawOctaves(self.pDC)
             self.Refresh()
 
-class wxPianoNote(Control):
+class wxPianoNote(wx.PyEvtHandler):
     def __init__(self, parent, Id, octave, note):
-        Control.__init__(self)
-        self.id = Id
-        
+        wx.PyEvtHandler.__init__(self)
+        self.Id = Id
         self.parent = parent
         self.octave = octave
         self.note = note
@@ -343,7 +345,7 @@ class wxPianoNote(Control):
     def OnRightDown(self,event):
         self.PopupMenu(ControlContextMenu(self), event.GetPosition())
     def GetId(self):
-        return self.id
+        return self.Id
     def SetControl(self):
         print("Set Control Event Note")
     def UpdateDC(self, paint, pos, size):
@@ -376,6 +378,10 @@ class wxPianoNote(Control):
             self.NoteOff(False)
         else:
             self.NoteOn(False)
+    def SetInput(self, input_type='CC', address=[0,0], option = None):
+        wx.PostEvent(self, MessageRecord(self, self.Id, input_type, address, option))
+    def GetInputs(self):
+        wx.PostEvent(self, MessageGet(self))
 class wxWhitePianoNote(wxPianoNote):
     def __init__(self, parent, ID, octave, note):
         wxPianoNote.__init__(self, parent, ID, octave, note)
@@ -408,11 +414,10 @@ class wxBlackPianoNote(wxPianoNote):
     def GetColor(self):
         return 'b'
 
-class wxClock(wx.Panel, Control):
-    def __init__(self, parent, signature=[4,4], beats_per_bar=4, ticks_per_beat = 24):
+class wxClock(wx.Panel):
+    def __init__(self, parent, Id, signature=[4,4], beats_per_bar=4, ticks_per_beat = 24):
         self.parent = parent
         wx.Panel.__init__(self, parent)
-        Control.__init__(self)
         self.BeatsLights = []
         self.BeatsPerBar = beats_per_bar
         self.Beat = 0
@@ -463,3 +468,7 @@ class wxClock(wx.Panel, Control):
         if self.Beat >= len(self.BeatsLights):
             self.Beat = 0
         self.BeatsLights[self.Beat].SetBackgroundColour('GREEN')
+    def SetInput(self, input_type='CC', address=[0,0], option = None):
+        wx.PostEvent(self, MessageRecord(self, self.Id, input_type, address, option))
+    def GetInputs(self):
+        wx.PostEvent(self, MessageGet(self))

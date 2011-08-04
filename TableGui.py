@@ -6,7 +6,7 @@ from CustomWidgets import wxKnob
 from CustomWidgets import wxPiano
 from wx.lib.agw.knobctrl import *
 
-class TablePanel(wxMidiPanel):
+class TablePanel(wx.Panel):
     def __init__(self, *args, **kwargs):
         wx.Panel.__init__(self, *args, **kwargs)
         self.parent = args[0]
@@ -27,10 +27,10 @@ class TablePanel(wxMidiPanel):
         hbox0.Add(self.knob4)
         vbox.Add(hbox0, proportion=1, flag=wx.EXPAND|wx.ALL)
         hbox1 = wx.BoxSizer(wx.HORIZONTAL)
-        self.fader1 = wxFader(self)
-        self.fader2 = wxFader(self)
-        self.fader3 = wxFader(self)
-        self.fader4 = wxFader(self)
+        self.fader1 = wxFader(self,wx.NewId())
+        self.fader2 = wxFader(self,wx.NewId())
+        self.fader3 = wxFader(self,wx.NewId())
+        self.fader4 = wxFader(self,wx.NewId())
         hbox1.Add(self.fader1, proportion=1, flag=wx.EXPAND|wx.ALL)
         hbox1.Add(self.fader2, proportion=1, flag=wx.EXPAND|wx.ALL)
         hbox1.Add(self.fader3, proportion=1, flag=wx.EXPAND|wx.ALL)
@@ -61,7 +61,5 @@ class TablePanel(wxMidiPanel):
         self.fader1.SetInput(input_type = 'CC', address = [2,24])
         self.fader2.SetInput(input_type = 'CC', address = [2,25])
         self.fader3.SetInput(input_type = 'Note', address = [1,48])
-        self.parent.SetControls(self.fader1.Update, self.fader1.GetInputs())
-        self.parent.SetControls(self.fader2.Update, self.fader2.GetInputs())
-        self.parent.SetControls(self.fader3.Update, self.fader3.GetInputs())
-        self.parent.SetControls(self.piano.Update, self.piano.GetInputs())
+        self.fader4.SetInput(input_type = 'CC', address = [2,26])
+        self.fader2.UnSetInput(input_type = 'CC', address = [2,25])

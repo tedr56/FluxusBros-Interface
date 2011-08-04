@@ -5,6 +5,7 @@ import wx
 import re
 import rtmidi
 from MidiConnectionsRtMidi import Connections
+from MessageDispatch import *
 from MediaGui import MediaPanel
 from TableGui import TablePanel
 from SequencerGui import SequencerPanel
@@ -22,10 +23,16 @@ class MyFrame(wx.Frame):
         self.InputOSC   = []
         self.InputSysEx = []
         self.InputClock = []
+        self.Dispatch = MessageDispatchRules()
+        EVT_WIDGET_MESSAGE_RECORD(self, self.Dispatch.AddInMessage)
+        EVT_WIDGET_MESSAGE_UNRECORD(self, self.Dispatch.DelInMessage)
 
         self.InitMidi()
         self.InitPanels()
-
+    def AddInMessage(self, event):
+        print("EVENT!")
+    def DelInMessage(self, event):
+        print("EVENT!")
     def InitConfig(self, parent, ID, title):
         self.cfg = ConfigParser.ConfigParser()
         f = "./config.cfg"
