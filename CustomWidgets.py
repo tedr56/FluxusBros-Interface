@@ -108,19 +108,27 @@ class wxFader(wx.Slider):
         self.SetRange(0, 127)
         self.Bind(wx.EVT_RIGHT_DOWN, self.OnRightDown)
         self.Bind(wx.EVT_COMMAND_SCROLL, self.OnScrolled)
+        EVT_WIDGET_MESSAGE(self, self.GetMessage)
+        EVT_WIDGET_UPDATE(self, self.WidgetUpdate)
     def OnRightDown(self,event):
         self.PopupMenu(ControlContextMenu(self), event.GetPosition())
     def Update(self, input_type='cc', address=[0,0], value=0):
         self.SetValue(value)
     def OnScrolled(self, event):
-        self.parent.OnMessage(self.getMessage())
+        #self.parent.OnMessage(self.getMessage())
+        wx.PostEvent(self, InternalMessage(self, self.GetValue()))
     def SetInput(self, input_type='CC', address=[0,0], option = None):
         wx.PostEvent(self, MessageRecord(self, self.FaderId, input_type, address, option))
     def UnSetInput(self, input_type='CC', address=[0,0], option = None):
         wx.PostEvent(self, MessageUnRecord(self, self.FaderId, input_type, address, option))
+    def GetMessage(self, event):
+        print("Message")
+        print event.GetType()
+        print event.GetAddress()
     def GetInputs(self):
         wx.PostEvent(self, MessageGet(self))
-        
+    def WidgetUpdate(self, event):
+        self.SetValue(event.GetValue())
 class wxCrossFader(wxFader):
     def __init__(self, *args, **kwargs):
         wxFader.__init__(self, *args, style = wx.SL_AUTOTICKS |  wx.SL_HORIZONTAL | wx.SL_LABELS | wx.SL_INVERSE, **kwargs)

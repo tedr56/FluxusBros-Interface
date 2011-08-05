@@ -61,5 +61,6 @@ class TablePanel(wx.Panel):
         self.fader1.SetInput(input_type = 'CC', address = [2,24])
         self.fader2.SetInput(input_type = 'CC', address = [2,25])
         self.fader3.SetInput(input_type = 'Note', address = [1,48])
-        self.fader4.SetInput(input_type = 'CC', address = [2,26])
+        self.fader4.SetInput(input_type = 'CC', address = [2,24])
         self.fader2.UnSetInput(input_type = 'CC', address = [2,25])
+        self.fader2.GetInputs()

@@ -1,56 +1,6 @@
 import wx
 from threading import Thread
 
-#Create Internal and External OUT Events
-EVT_INTERNAL_OUT_MSG_ID = wx.NewId()
-EVT_EXTERNAL_OUT_MSG_ID = wx.NewId()
-
-def EVT_INTERNAL_OUT(win, func):
-    """Define Result Event."""
-    win.Connect(-1, -1, EVT_INTERNAL_OUT_MSG_ID, func)
-
-class InternalOutEvent(wx.PyEvent):
-    """Simple event to carry arbitrary result data."""
-    def __init__(self, data):
-        """Init Result Event."""
-        wx.PyEvent.__init__(self)
-        self.SetEventType(EVT_INTERNAL_OUT_MSG_ID)
-        self.data = data
-        
-def EVT_EXTERNAL_OUT(win, func):
-    """Define Result Event."""
-    win.Connect(-1, -1, EVT_EXTERNAL_OUT_MSG_ID, func)
-
-class ExternalOutEvent(wx.PyEvent):
-    """Simple event to carry arbitrary result data."""
-    def __init__(self, data):
-        """Init Result Event."""
-        wx.PyEvent.__init__(self)
-        self.SetEventType(EVT_EXTERNAL_OUT_MSG_ID)
-        self.data = data
-
-#Create Internal and External IN Events
-EVT_INTERNAL_IN_MSG_ID = wx.NewId()
-EVT_EXTERNAL_IN_MSG_ID = wx.NewId()
-
-def EVT_INTERNAL_IN(win, func):
-    win.Connect(-1, -1, EVT_INTERNAL_IN_MSG_ID, func)
-
-class InternalOutEvent(wx.PyEvent):
-    def __init__(self, data):
-        wx.PyEvent.__init__(self)
-        self.SetEventType(EVT_INTERNAL_IN_MSG_ID)
-        self.data = data
-        
-def EVT_EXTERNAL_IN(win, func):
-    win.Connect(-1, -1, EVT_EXTERNAL_IN_MSG_ID, func)
-
-class ExternalOutEvent(wx.PyEvent):
-    def __init__(self, data):
-        wx.PyEvent.__init__(self)
-        self.SetEventType(EVT_EXTERNAL_IN_MSG_ID)
-        self.data = data
-
 class MessageDispatch(Thread):
     def __init__(self, wxObject,Message,MessageList):
         Thread.__init__(self)
@@ -62,50 +12,50 @@ class MessageDispatch(Thread):
         
 
 #Event based Message Dispactch Rules Hanlder
-EVT_WIDGET_MESSAGE_RECORD_ID = wx.NewId()
 
+#Basic Message Event handles Type,Address,Option
+EVT_WIDGET_MESSAGE_ID = wx.NewId()
+def EVT_WIDGET_MESSAGE(win, func):
+    win.Connect(-1, -1, EVT_WIDGET_MESSAGE_ID, func)
+
+class Message(wx.PyCommandEvent):
+    def __init__(self, Object, Id, Type, Address, Option):
+        wx.PyCommandEvent.__init__(self)
+        self.SetEventType(EVT_WIDGET_MESSAGE_ID)
+        self.SetEventObject(Object)
+        self.SetId(Id)
+        self.Type = Type
+        self.Address = Address
+        self.Option = Option
+    def GetType(self):
+        return self.Type
+    def GetAddress(self):
+        return self.Address
+    def GetOption(self):
+        return self.Option
+
+#Event send by Widgets to record them to the MessageDispatch
+EVT_WIDGET_MESSAGE_RECORD_ID = wx.NewId()
 def EVT_WIDGET_MESSAGE_RECORD(win, func):
     win.Connect(-1, -1, EVT_WIDGET_MESSAGE_RECORD_ID, func)
 
-class MessageRecord(wx.PyCommandEvent):
+class MessageRecord(Message):
     def __init__(self, Object, Id, Type, Address, Option):
-        wx.PyCommandEvent.__init__(self)
+        Message.__init__(self, Object, Id, Type, Address, Option)
         self.SetEventType(EVT_WIDGET_MESSAGE_RECORD_ID)
-        self.SetEventObject(Object)
-        self.SetId(Id)
-        self.Type = Type
-        self.Address = Address
-        self.Option = Option
-    def GetType(self):
-        return self.Type
-    def GetAddress(self):
-        return self.Address
-    def GetOption(self):
-        return self.Option
 
+#Event send by Widgets to UNrecord them to the MessageDispatch
 EVT_WIDGET_MESSAGE_UNRECORD_ID = wx.NewId()
-
 def EVT_WIDGET_MESSAGE_UNRECORD(win, func):
     win.Connect(-1, -1, EVT_WIDGET_MESSAGE_UNRECORD_ID, func)
 
-class MessageUnRecord(wx.PyCommandEvent):
+class MessageUnRecord(Message):
     def __init__(self, Object, Id, Type, Address, Option):
-        wx.PyCommandEvent.__init__(self)
+        Message.__init__(self, Object, Id, Type, Address, Option)
         self.SetEventType(EVT_WIDGET_MESSAGE_UNRECORD_ID)
-        self.SetEventObject(Object)
-        self.SetId(Id)
-        self.Type = Type
-        self.Address = Address
-        self.Option = Option
-    def GetType(self):
-        return self.Type
-    def GetAddress(self):
-        return self.Address
-    def GetOption(self):
-        return self.Option
 
+#Event from Widget to ask their recorded messages
 EVT_WIDGET_MESSAGE_GET_ID = wx.NewId()
-
 def EVT_WIDGET_MESSAGE_GET(win, func):
     win.Connect(-1, -1, EVT_WIDGET_MESSAGE_GET_ID, func)
 
@@ -114,13 +64,71 @@ class MessageGet(wx.PyCommandEvent):
         wx.PyCommandEvent.__init__(self)
         self.SetEventType(EVT_WIDGET_MESSAGE_GET_ID)
         self.SetEventObject(Object)
+        self.SetId(Object.GetId())
+    def GetId(self):
+        return self.Id
 
+#Event from Widget signaling it have been updated
+EVT_WIDGET_MESSAGE_UPDATE_ID = wx.NewId()
+def EVT_WIDGET_MESSAGE_UPDATE(win, func):
+    win.Connect(-1, -1, EVT_WIDGET_MESSAGE_UPDATE_ID, func)
+
+class InternalMessage(wx.PyCommandEvent):
+    def __init__(self, Object, Value):
+        wx.PyCommandEvent.__init__(self)
+        self.SetEventType(EVT_WIDGET_MESSAGE_UPDATE_ID)
+        self.SetEventObject(Object)
+        self.SetId(Object.GetId())
+        self.Value = Value
+    def GetId(self):
+        return self.Id
+    def GetValue(self):
+        return self.Value
+
+#Event send to update Widget value
+EVT_WIDGET_UPDATE_ID = wx.NewId()
+def EVT_WIDGET_UPDATE(win, func):
+    win.Connect(-1, -1, EVT_WIDGET_UPDATE_ID, func)
+
+class WidgetUpdate(wx.PyCommandEvent):
+    def __init__(self, Object, Value):
+        wx.PyCommandEvent.__init__(self)
+        self.SetEventType(EVT_WIDGET_UPDATE_ID)
+        self.SetEventObject(Object)
+        self.SetId(Object.GetId())
+        self.Value = Value
+    def GetId(self):
+        return self.Id
+    def GetValue(self):
+        return self.Value
+
+#External Midi Event
+EVT_EXTERNAL_MIDI_MESSAGE_ID = wx.NewId()
+def EVT_EXTERNAL_MIDI_MESSAGE(win, func):
+    win.Connect(-1, -1, EVT_EXTERNAL_MIDI_MESSAGE_ID, func)
+
+class ExternalMidiMessageEvt(wx.PyCommandEvent):
+    def __init__(self, midi_message):
+        wx.PyCommandEvent.__init__(self)
+        self.SetEventType(EVT_EXTERNAL_MIDI_MESSAGE_ID)
+        self.midi_message = midi_message
+    def GetMidiMessage(self):
+        return self.midi_message
+
+#Main Messages Dispatch Class
 class MessageDispatchRules(wx.PyEvtHandler):
     def __init__(self):
         wx.PyEvtHandler.__init__(self)
         self.OutMessages = []
         self.OutObjectMessages = dict()
         self.OutTypeMessages = dict()
+    def SearchIndex(self, index, Table):
+        result = None
+        for i in range(len(Table)):
+            print i
+            if Table[i] == index:
+                result = i
+                return result
     def AddInMessage(self, event):
         Object = event.GetEventObject()
         Id = event.GetId()
@@ -131,7 +139,6 @@ class MessageDispatchRules(wx.PyEvtHandler):
         MessagePos  = len(self.OutMessages)
         OutMessages = event
         self.OutMessages.append(OutMessages)
-        print("debug")
         if Id in self.OutObjectMessages:
             self.OutObjectMessages[Id].append(MessagePos)
         else:
@@ -141,6 +148,7 @@ class MessageDispatchRules(wx.PyEvtHandler):
             self.OutTypeMessages[Type].append(MessagePos)
         else:
             self.OutTypeMessages[Type] = [MessagePos]
+        print("AddMessage debug")
         print Type
         print Id
         print Address
@@ -183,14 +191,66 @@ class MessageDispatchRules(wx.PyEvtHandler):
                         ElmtIndex = self.OutTypeMessages[ElmtType][index]
                         self.self.OutTypeMessages[ElmtType].pop(index)
                         self.self.OutTypeMessages[ElmtType].insert(ElmtIndex - 1, index)
-                        
-                        
-    def SearchIndex(self, index, Table):
-        result = None
-        print("search")
-        for i in range(len(Table)):
-            print i
-            if Table[i] == index:
-                print("index found")
-                result = i
-                return result
+    def GetInMessage(self,event):
+        Id = event.GetId()
+        print("GetInMessage debug")
+        print Id
+        print self.OutObjectMessages
+        if Id in self.OutObjectMessages:
+            for elmt in self.OutObjectMessages[Id]:
+                message = self.OutMessages[elmt]
+                wx.PostEvent(message.GetEventObject(), Message(message.GetEventObject(), message.GetId(), message.GetType(), message.GetAddress(), message.GetOption()))
+        else:
+                wx.PostEvent(event.GetEventObject(), Message(event.GetEventObject(), event.GetId(), None, None, None))
+    def InternalMessage(self, event):
+        print("Internal Message")
+        print event.GetValue()
+        Object = event.GetEventObject()
+        Id = event.GetId()
+        Value = event.GetValue()
+        if Id in self.OutObjectMessages:
+            for elmt in self.OutObjectMessages[Id]:
+                Elmt = self.OutMessages[elmt]
+                ElmtType = Elmt.GetType()
+                ElmtAdd  = Elmt.GetAddress()
+                ElmtOpt  = Elmt.GetOption()
+                self.SendExternalMessage(ElmtType, ElmtAdd, ElmtOpt, Value)
+                for subelmt in self.OutTypeMessages[ElmtType]:
+                    subElmt = self.OutMessages[subelmt]
+                    subElmtObject = subElmt.GetEventObject()
+                    wx.PostEvent(subElmtObject, WidgetUpdate(subElmtObject , Value)    )
+    def ExternalMidiMessage(self, event):
+        MidiData = event.GetMidiMessage()
+        if MidiData.isController():
+            self.ExternalMidiMessageDispatch('CC', [MidiData.getChannel(), MidiData.getControllerNumber()], MidiData.getControllerValue())
+        elif MidiData.isNoteOnOrOff():
+            if MidiData.isNoteOn():
+                self.ExternalMidiMessageDispatch('Note', [MidiData.getChannel(), MidiData.getNoteNumber()], MidiData.getVelocity())
+            else:
+                self.ExternalMidiMessageDispatch('Note', [MidiData.getChannel(), MidiData.getNoteNumber()], 0)
+        elif MidiData.isSysEx():
+            self.ExternalMidiMessageDispatch('SysEx', [0,0], MidiData.getSysExData())
+        elif self.IsClockEvent(MidiData):
+            self.ExternalMidiMessageDispatch('Clock', [0,0], ord(MidiData.getRawData()[0]))
+    def ExternalMidiMessageDispatch(self, Type, Address, Value):
+        print ("ExternalMidiMessageDispatch debug")
+        print Type
+        print Address
+        print Value
+    def IsClockEvent(self, data):
+        #Clock Raw Data
+        #clock tick     = 248(10) F8(16)
+        #clock stop     = 252(10) FC(16)
+        #clock start    = 250(10) FA(16)
+        #clock continue = 251(10) FB(16)
+        decoded_data = ord(data.getRawData()[0])
+        if decoded_data in [248,250,251,252]:
+            return decoded_data
+        else:
+            return False
+    def SendExternalMessage(self, Type, Address, Option, Value):
+        print ("SendExternalMessage")
+        print Type
+        print Address
+        print Value
+
