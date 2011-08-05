@@ -10,7 +10,7 @@ FluxusInPort = "FluxusMidi Input Client:0"
 MicroKontrol_Out_Client = "microKontrol"
 MicroKontrol_Out_Port = "microKONTROL:1"
 VirtualKeyboard_Port = "Virtual Keyboard:0"
-
+Kmidimon_Port = "KMidimon:0"
 
 #Class to manage MIDI Connections
 class Connections:
@@ -35,6 +35,7 @@ class Connections:
         self.add_in_port_wish(VirtualKeyboard_Port)
         self.add_in_port_wish(MicroKontrol_Out_Port)
         self.add_out_port_wish(FluxusInPort)
+        self.add_out_port_wish(Kmidimon_Port)
         self.refresh_connections()
 
     def sendMessage(self, message):

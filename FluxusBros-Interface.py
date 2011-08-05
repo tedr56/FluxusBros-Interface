@@ -23,12 +23,13 @@ class MyFrame(wx.Frame):
         self.InputOSC   = []
         self.InputSysEx = []
         self.InputClock = []
-        self.Dispatch = MessageDispatchRules()
+        self.Dispatch = MessageDispatchRules(self)
         EVT_WIDGET_MESSAGE_RECORD(self, self.Dispatch.AddInMessage)
         EVT_WIDGET_MESSAGE_UNRECORD(self, self.Dispatch.DelInMessage)
         EVT_WIDGET_MESSAGE_GET(self, self.Dispatch.GetInMessage)
         EVT_WIDGET_MESSAGE_UPDATE(self, self.Dispatch.InternalMessage)
-        EVT_EXTERNAL_MIDI_MESSAGE(self, self.Dispatch.ExternalMidiMessage)
+        EVT_EXTERNAL_MIDI_IN_MESSAGE(self, self.Dispatch.ExternalMidiInMessage)
+        EVT_EXTERNAL_MIDI_OUT_MESSAGE(self, self.MidiOutputRefresh)
         self.InitMidi()
         self.InitPanels()
     def InitConfig(self, parent, ID, title):
@@ -62,10 +63,10 @@ class MyFrame(wx.Frame):
         self.SetSizer(vbox)
     def InitMidi(self):
         self.MidiConnect = Connections(self.MidiInputRefresh)
-    def MidiInputRefresh(self, data):
-        wx.PostEvent(self, ExternalMidiMessageEvt(data))
-    def MidiOutputRefresh(self, data):
-        wx.CallAfter(self.MidiOutDispatch, data)
+    def MidiInputRefresh(self, midi_data):
+        wx.PostEvent(self, ExternalMidiInMessage(midi_data))
+    def MidiOutputRefresh(self, event):
+        self.MidiConnect.sendMessage(event.GetMidiMessage())
     def MidiOutDispatch(self, data):
         print data
         for m in data:
