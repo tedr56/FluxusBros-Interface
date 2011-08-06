@@ -6,6 +6,7 @@ import re
 import rtmidi
 from MidiConnectionsRtMidi import Connections
 from MessageDispatch import *
+from ClockGui import ClockControl
 from MediaGui import MediaPanel
 from TableGui import TablePanel
 from SequencerGui import SequencerPanel
@@ -65,11 +66,26 @@ class MyFrame(wx.Frame):
         else:
             self.Players = DEFAULT_PLAYERS
             self.cfg['Players'] = self.Players
-        self.InitPanels(self.Players)
-    def InitPanels(self, players=[]):
+            self.cfg.write()
+        if 'DefaultPlayer' in self.cfg:
+            self.DefaultPlayer = self.cfg['DefaultPlayer']
+        else:
+            self.DefaultPlayer = self.cfg.as_list('Players')[1]
+            self.cfg['DefaultPlayer'] = self.DefaultPlayer
+            self.cfg.write()
+        self.InitPanels()
+    def InitMidi(self, inmidi=[], outmidi=[]):
+        self.MidiConnect = Connections(self.MidiInputRefresh, inmidi, outmidi)
+    def MidiInputRefresh(self, midi_data):
+        wx.PostEvent(self, ExternalMidiInMessage(midi_data))
+    def MidiOutputRefresh(self, event):
+        self.MidiConnect.sendMessage(event.GetMidiMessage())
+    def InitPanels(self):
         vbox = wx.BoxSizer(wx.VERTICAL)
+        toolbar = self.InitToolBar()
+        vbox.Add(toolbar, 0, wx.EXPAND)
         hbox = wx.BoxSizer(wx.HORIZONTAL)
-        self.Media = MediaPanel(self, players)
+        self.Media = MediaPanel(self)
         self.Table = TablePanel(self)
         self.Sequencer = SequencerPanel(self)
         hbox.Add(self.Media, proportion = 0, flag=wx.EXPAND)
@@ -77,14 +93,24 @@ class MyFrame(wx.Frame):
         hbox.Add(self.Sequencer, proportion = 1, flag=wx.EXPAND)
         vbox.Add(hbox, proportion=-1, flag=wx.EXPAND)
         self.SetSizer(vbox)
-    def InitMidi(self, inmidi=[], outmidi=[]):
-        self.MidiConnect = Connections(self.MidiInputRefresh, inmidi, outmidi)
-    def MidiInputRefresh(self, midi_data):
-        wx.PostEvent(self, ExternalMidiInMessage(midi_data))
-    def MidiOutputRefresh(self, event):
-        self.MidiConnect.sendMessage(event.GetMidiMessage())
-    def SetPlayer(self, player):
-        print("New Player : %s" % player)
+    def InitToolBar(self):
+        toolbar = wx.ToolBar(self, -1)
+        TOOL_ID = wx.NewId()
+        TOOL_ID_COMBO = wx.NewId()
+        combo = wx.ComboBox(toolbar, TOOL_ID_COMBO, choices = self.Players)
+        combo.SetStringSelection(self.DefaultPlayer)
+        toolbar.AddControl(combo)
+        wx.EVT_COMBOBOX(self, TOOL_ID_COMBO, self.SetPlayer)
+        Clock = ClockControl(toolbar)
+        toolbar.AddControl(Clock)
+        bmp = wx.ArtProvider.GetBitmap(wx.ART_EXECUTABLE_FILE, wx.ART_OTHER, (16, 16))
+        toolbar.AddSeparator()
+        ToolbarPreferences = toolbar.AddLabelTool(-1, 'Preferences', bmp, shortHelp='Preferences')
+        #~ self.Bind(wx.EVT_MENU, self.onPrint, printTool)
+        toolbar.Realize()
+        return toolbar
+    def SetPlayer(self, event):
+        print("New Player : %s" % event.GetEventObject().GetValue())
          
 class MyApp(wx.App):
     def OnInit(self, *args, **kwargs):
