@@ -24,6 +24,8 @@ Kmidimon_Port = "KMidimon:0"
 INMIDIPORT = [MicroKontrol_Out_Port , VirtualKeyboard_Port]
 OUTMIDIPORT = [FluxusInPort , Kmidimon_Port]
 
+DEFAULT_PLAYERS = ["Korg" , "VMXVJ" , "BitStream"]
+
 class MyFrame(wx.Frame):
     def __init__(self, parent, ID, title):
         self.cfg = ConfigObj("./config.cfg")
@@ -35,14 +37,14 @@ class MyFrame(wx.Frame):
         EVT_WIDGET_MESSAGE_UPDATE(self, self.Dispatch.InternalMessage)
         EVT_EXTERNAL_MIDI_IN_MESSAGE(self, self.Dispatch.ExternalMidiInMessage)
         EVT_EXTERNAL_MIDI_OUT_MESSAGE(self, self.MidiOutputRefresh)
-        self.InitPanels()
     def InitConfig(self, parent, ID, title):
-        if self.cfg['App']:
+        if 'App' in self.cfg:
             print("Config File")
             w , h = self.cfg['App'].as_int('width'), self.cfg['App'].as_int('height')
         else:
             print("Defaults")
             w, h = (APP_SIZE_X, APP_SIZE_Y)
+            self.cfg['App'] = {}
             self.cfg['App']['width'] = w
             self.cfg['App']['height'] = h
             self.cfg.write()
@@ -58,10 +60,16 @@ class MyFrame(wx.Frame):
             self.cfg['MidiPort']['OutPort'] = outmidiport
             self.cfg.write()
         self.InitMidi(inmidiport, outmidiport)
-    def InitPanels(self):
+        if 'Players' in self.cfg:
+            self.Players = self.cfg.as_list('Players')
+        else:
+            self.Players = DEFAULT_PLAYERS
+            self.cfg['Players'] = self.Players
+        self.InitPanels(self.Players)
+    def InitPanels(self, players=[]):
         vbox = wx.BoxSizer(wx.VERTICAL)
         hbox = wx.BoxSizer(wx.HORIZONTAL)
-        self.Media = MediaPanel(self)
+        self.Media = MediaPanel(self, players)
         self.Table = TablePanel(self)
         self.Sequencer = SequencerPanel(self)
         hbox.Add(self.Media, proportion = 0, flag=wx.EXPAND)
@@ -75,8 +83,8 @@ class MyFrame(wx.Frame):
         wx.PostEvent(self, ExternalMidiInMessage(midi_data))
     def MidiOutputRefresh(self, event):
         self.MidiConnect.sendMessage(event.GetMidiMessage())
-    def SetPlayer(self, event):
-        print("New Player : %s" % event.GetEventObject().GetValue())
+    def SetPlayer(self, player):
+        print("New Player : %s" % player)
          
 class MyApp(wx.App):
     def OnInit(self, *args, **kwargs):

@@ -2,17 +2,20 @@ import wx
 from ClockGui import ClockPanel
 
 class MediaPanel(wx.Panel):
-    def __init__(self, *args, **kwargs):
-        wx.Panel.__init__(self, *args, **kwargs)
-        self.parent = args[0]
-        self.InitUI()
-    def InitUI(self):
+    def __init__(self, parent, players=[]):
+        wx.Panel.__init__(self, parent)
+        self.parent = parent
+        self.players = players
+        print("MediaPanel debug")
+        print players
+        self.InitUI(self.players)
+    def InitUI(self, players):
         bmp = wx.ArtProvider.GetBitmap(wx.ART_INFORMATION, wx.ART_OTHER, (16, 16))
         vbox = wx.BoxSizer(wx.VERTICAL)
         toolbar = wx.ToolBar(self, -1)
         TOOL_ID = wx.NewId()
         TOOL_ID_COMBO = wx.NewId()
-        combo = wx.ComboBox(toolbar, TOOL_ID_COMBO, choices = ["MicroKontrol", "VMXVJ", "BitStream3X"])
+        combo = wx.ComboBox(toolbar, TOOL_ID_COMBO, choices = players)
         combo.SetSelection(0)
         toolbar.AddControl(combo)
         wx.EVT_COMBOBOX(self, TOOL_ID_COMBO, self.OnCombo)
@@ -27,5 +30,5 @@ class MediaPanel(wx.Panel):
         self.SetSizer(vbox)
 
     def OnCombo(self, e):
-        self.parent.SetPlayer(e)
+        self.parent.SetPlayer(e.GetEventObject().GetValue())
 
