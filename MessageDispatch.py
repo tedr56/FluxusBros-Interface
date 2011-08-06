@@ -1,17 +1,6 @@
 import wx
 from threading import Thread
-import thread
 from rtmidi import MidiMessage
-
-class MessageDispatch(Thread):
-    def __init__(self, wxObject,Message,MessageList):
-        Thread.__init__(self)
-        self.wxObject = wxObject
-        self.MessageList = MessageList
-        self.Message = Message
-        self.start()
-    #def run(self):
-        
 
 #Event based Message Dispactch Rules Hanlder
 
@@ -92,12 +81,10 @@ EVT_WIDGET_UPDATE_ID = wx.NewId()
 def EVT_WIDGET_UPDATE(win, func):
     win.Connect(-1, -1, EVT_WIDGET_UPDATE_ID, func)
 
-class WidgetUpdate(wx.PyCommandEvent):
-    def __init__(self, Object, Value):
-        wx.PyCommandEvent.__init__(self)
+class WidgetUpdate(Message):
+    def __init__(self, Object, Id, Type, Address, Value):
+        Message.__init__(self, Object, Id, Type, Address, Value)
         self.SetEventType(EVT_WIDGET_UPDATE_ID)
-        self.SetEventObject(Object)
-        self.SetId(Object.GetId())
         self.Value = Value
     def GetId(self):
         return self.Id
@@ -157,13 +144,11 @@ class MessageDispatchRules(wx.PyEvtHandler):
         if Id in self.OutObjectMessages:
             self.OutObjectMessages[Id].append(MessagePos)
         else:
-            
             self.OutObjectMessages[Id] = [MessagePos]
         if Type in self.OutTypeMessages:
             self.OutTypeMessages[Type].append(MessagePos)
         else:
             self.OutTypeMessages[Type] = [MessagePos]
-
     def DelInMessage(self, event):
         Object = event.GetEventObject()
         Id = event.GetId()
@@ -220,8 +205,9 @@ class MessageDispatchRules(wx.PyEvtHandler):
                 self.SendExternalMessage(ElmtType, ElmtAdd, ElmtOpt, Value)
                 for subelmt in self.OutTypeMessages[ElmtType]:
                     subElmt = self.OutMessages[subelmt]
-                    subElmtObject = subElmt.GetEventObject()
-                    wx.PostEvent(subElmtObject, WidgetUpdate(subElmtObject , Value))
+                    if subElmt.GetAddress() == ElmtAdd:
+                        subElmtObject = subElmt.GetEventObject()
+                        wx.PostEvent(subElmtObject, WidgetUpdate(subElmtObject , subElmt.GetId(), subElmt.GetType(), subElmt.GetAddress() ,Value))
     def ExternalMidiInMessage(self, event):
         MidiData = event.GetMidiMessage()
         if MidiData.isController():
@@ -234,14 +220,14 @@ class MessageDispatchRules(wx.PyEvtHandler):
         elif MidiData.isSysEx():
             self.ExternalMidiMessageInDispatch('SysEx', [0,0], MidiData.getSysExData())
         elif self.IsClockEvent(MidiData):
-            self.ExternalMidiMessageInDispatch('Clock', [0,0], ord(MidiData.getRawData()[0]))
+            self.ExternalMidiMessageInDispatch('Clock', ord(MidiData.getRawData()[0]), 1)
     def ExternalMidiMessageInDispatch(self, Type, Address, Value):
         if Type in self.OutTypeMessages:
             for elmt in self.OutTypeMessages[Type]:
                 Elmt = self.OutMessages[elmt]
                 if Elmt.GetAddress() == Address:
                     ElmtObject = Elmt.GetEventObject()
-                    wx.PostEvent(ElmtObject, WidgetUpdate(ElmtObject , Value))
+                    wx.PostEvent(ElmtObject, WidgetUpdate(ElmtObject , Elmt.GetId(), Type, Address, Value))
     def IsClockEvent(self, data):
         #Clock Raw Data
         #clock tick     = 248(10) F8(16)

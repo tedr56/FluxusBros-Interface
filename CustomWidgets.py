@@ -4,86 +4,7 @@ from MessageDispatch import *
 import rtmidi
 
 MIDI_CLOCK_TICK = 0x48
-class Control(wx.PyControl):
-    def __init__(self, parent, GetControlValue=None, InitValue=0):
-        wx.PyControl.__init__(self, parent)
-        self.InputCC    = []
-        self.InputNote  = []
-        self.InputSysEx = []
-        self.InputOSC   = []
-        self.InputClock = []
-        if GetControlValue == None:
-            self.getvalue = self.NoGetValue
-        else:
-            self.getvalue = GetControlValue
-    def NoGetValue(self):
-        return 0
-    def OnRightDown(self,event):
-        self.PopupMenu(ControlContextMenu(self), event.GetPosition())
-    def SetControl(self):
-        print("Set Control")
-    def SetInput(self, input_type='CC', address=[0,0], option = None):
-        wx.PostEvent(self, MessageRecord(self, input_type, address, option))
-        if input_type=='CC' or input_type=='cc':
-            self.SetMidiCCInput(address, option)
-        elif input_type=='note' or input_type=='Note':
-            self.SetMidiNoteInput(address, option)
-        elif input_type=='OSC' or input_type=='osc':
-            self.SetOSCInput(address, option)
-        elif input_type=='SysEx':
-            self.SetMidiSysExInput(address)
-        elif input_type=='clock' or input_type=='Clock':
-            self.SetMidiClockInput(address)
-    def SetMidiCCInput(self, address, option=None):
-        self.InputCC.append(address)
-    def SetMidiNoteInput(self, address, option=None):
-        self.InputNote.append(address)
-    def SetOSCInput(self, address, option=None):
-        self.InputOSC.append(address)
-    def SetMidiClockInput(self, address):
-        self.InputClock.append(0x48)
-    def SetMidiSysExInput(self,address):
-        self.InputSysEx.append(address)
-    def GetInputs(self):
-        inputs= {'CC': self.GetMidiCCInputs(), 'Note':self.GetMidiNoteInputs(), 'OSC':self.GetMidiOSCInputs(), 'SysEx':self.GetMidiSysExInputs(), 'Clock':self.GetMidiClockInputs()}
-        return inputs
-    def GetMidiCCInputs(self):
-        return self.InputCC
-    def GetMidiNoteInputs(self):
-        return self.InputNote
-    def GetMidiOSCInputs(self):
-        return self.InputOSC
-    def GetMidiSysExInputs(self):
-        return self.InputSysEx
-    def GetMidiClockInputs(self):
-        return self.InputClock
-    def GetControlValue(self):
-        return self.getvalue()
-    def getMessage(self):
-        msg = []
-        value = self.GetControlValue()
-        
-        if self.InputCC:
-            print("Input CC")
-            print self.InputCC
-            for c in self.InputCC:
-                messageCC = rtmidi.MidiMessage().controllerEvent(c[0] , c[1], value)
-                msg.append(messageCC)
-        else:
-            print("No input CC")
-        #if self.InputNote:
-        #    print("Input Note")
-        #    print self.InputNote        
-        #    for n in self.InputNote:
-        #        if value:
-        #            messageNote = rtmidi.MidiMessage().noteOn(n[0] , n[1], value)
-        #        else:
-        #            messageNote = rtmidi.MidiMessage().noteOff(n[0] , n[1])
-        #        msg.append(messageNote)
-        #else:
-        #    print("No input Note")
-        #print value
-        return msg
+
 class ControlContextMenu(wx.Menu):
     def __init__(self, parent):
         wx.Menu.__init__(self)
@@ -94,12 +15,7 @@ class ControlContextMenu(wx.Menu):
 
     def OnSetControl(self, event):
         self.parent.SetControl()
- 
-class wxMidiPanel(wx.Panel):
-    def __init__(self, *args, **kwargs):
-        wx.Panel.__init__(self, parent, *args, **kwargs)
-        self.parent = parent
-        
+         
 class wxFader(wx.Slider):
     def __init__(self, *args,  **kwargs):
         self.parent = args[0]
@@ -112,10 +28,7 @@ class wxFader(wx.Slider):
         EVT_WIDGET_UPDATE(self, self.WidgetUpdate)
     def OnRightDown(self,event):
         self.PopupMenu(ControlContextMenu(self), event.GetPosition())
-    def Update(self, input_type='cc', address=[0,0], value=0):
-        self.SetValue(value)
     def OnScrolled(self, event):
-        #self.parent.OnMessage(self.getMessage())
         wx.PostEvent(self, InternalMessage(self, self.GetValue()))
     def SetInput(self, input_type='CC', address=[0,0], option = None):
         wx.PostEvent(self, MessageRecord(self, self.FaderId, input_type, address, option))
@@ -209,12 +122,12 @@ class wxPianoRoll(wx.Panel):
             if 'w' == self.octave_notes[i % len(self.octave_notes)]:
                 noteid = wx.NewId()
                 whitenote = wxWhitePianoNote(self, noteid, octave, note)
-                whitenote.SetInput(input_type = 'Note', address = [midichannel,midinote,i])
+                whitenote.SetInput(input_type = 'Note', address = [midichannel,midinote])
                 self.Notes.append(whitenote)
             elif 'b' == self.octave_notes[i % len(self.octave_notes)]:
                 noteid = wx.NewId()
                 blacknote = wxBlackPianoNote(self, noteid, octave, note)
-                blacknote.SetInput(input_type = 'Note', address = [midichannel,midinote,i])
+                blacknote.SetInput(input_type = 'Note', address = [midichannel,midinote])
                 self.Notes.append(blacknote)
         self.DrawOctaves(dc)
 
@@ -280,8 +193,8 @@ class wxPianoRoll(wx.Panel):
         self.pDC.DrawToDC(dc)
 
     def OnSize(self, event):
-        self.DrawOctaves(self.pDC)
-        self.Refresh()
+        self.Update()
+        
     def SearchNoteId(self, Id):
         for i in range(len(self.Notes)):
             if self.Notes[i].GetId() == Id:
@@ -289,8 +202,8 @@ class wxPianoRoll(wx.Panel):
     def FindNote(self, event):
         hitradius = 1
         x , y = event.GetPositionTuple()
-        #l = self.pDC.FindObjects(x, y, hitradius)
-        l = self.pDC.FindObjectsByBBox(x, y)
+        l = self.pDC.FindObjects(x, y, hitradius)
+        #l = self.pDC.FindObjectsByBBox(x, y)
         if l:
             first_note_detected = l[0]
             num_note = self.SearchNoteId(first_note_detected)
@@ -304,92 +217,74 @@ class wxPianoRoll(wx.Panel):
     def OnLeftDown(self,event):
         note = self.FindNote(event)
         if not note == None:
-            self.NoteOn(note, True)
+            self.NoteOn(note)
     def OnLeftUp(self,event):
         note = self.FindNote(event)
         if not note == None:
-            self.NoteOff(note, True)
-    def NoteOn(self, note, play):
-        self.Notes[note].NoteOn(play)
-        self.DrawOctaves(self.pDC)
-        self.Refresh()
-    def NoteOff(self, note, play):
-        self.Notes[note].NoteOff(play)
-        self.DrawOctaves(self.pDC)
-        self.Refresh()
+            self.NoteOff(note)
+    def NoteOn(self, note):
+        self.Notes[note].NoteOn()
+        self.Update()
+    def NoteOff(self, note):
+        self.Notes[note].NoteOff()
+        self.Update()
 
-    def GetInputs(self):
-        inputs=dict()
-        for n in self.Notes:
-            #print n.GetInputs()
-            for k,v in n.GetInputs().iteritems():
-                #print i
-                if inputs.has_key(k):
-                    inputs[k] = v+inputs[k]
-                else:
-                    inputs[k] = v
-        #print inputs
-        return inputs
-            
-    def Update(self, input_type='Note', address=[0,0], value=0):
-        if len(address) > 2:
-            num_note = address[2]
-            note = self.Notes[num_note]
-            note.Update(input_type, address, value)
-            self.DrawOctaves(self.pDC)
-            self.Refresh()
+    def Update(self):
+        self.DrawOctaves(self.pDC)
+        self.Refresh()
 
 class wxPianoNote(wx.PyEvtHandler):
     def __init__(self, parent, Id, octave, note):
         wx.PyEvtHandler.__init__(self)
         self.Id = Id
         self.parent = parent
-        self.octave = octave
-        self.note = note
         self.notelist = ["C", "C#" , "D" , "D#" , "E" , "F" , "F#" , "G" , "G#" , "A" , "A#" , "B"]
         self.size = wx.Size(0,0)
         self.pos = wx.Point(0,0)
-        self.played = False
-    def OnRightDown(self,event):
-        self.PopupMenu(ControlContextMenu(self), event.GetPosition())
+        self.Value = 0
+        EVT_WIDGET_MESSAGE(self, self.GetMessage)
+        EVT_WIDGET_UPDATE(self, self.Update)
+
     def GetId(self):
         return self.Id
-    def SetControl(self):
-        print("Set Control Event Note")
-    def UpdateDC(self, paint, pos, size):
-        self.DrawNote(paint)
-    def DrawNote(self, paint):
-        paint.DrawRectanglePointSize(self.pos,self.size)
-    def GetNote(self):
-        return self.notelist[self.note % len(self.notelist)]
-    def GetOctave(self):
-        return self.octave
     def GetPos(self):
         return self.pos
     def GetSize(self):
         return self.size
-
+    def GetValue(self):
+        self.Value
+    def UpdateDC(self, paint, pos, size):
+        self.DrawNote(paint)
+    def DrawNote(self, paint):
+        paint.DrawRectanglePointSize(self.pos,self.size)
     def OnRightDown(self,event):
         event.GetEventObject().PopupMenu(ControlContextMenu(self), event.GetPosition())        
-    def OnLeftDown(self,event):
-        self.NoteOn()
-    def OnLeftUp(self,event):
-        self.NoteOff()
-    def NoteOn(self, play):  #Parametre play a True => Send Midi Message Note On
-        print("Note On : %i %i" % (self.note, self.octave))
-        self.played = True
-    def NoteOff(self, play):  #Parametre play a True => Send Midi Message Note Off
-        print("Note Off : %i %i" % (self.note, self.octave))
-        self.played = False
-    def Update(self, input_type='Note', address=[0,0], value=0):
-        if value == 0:
-            self.NoteOff(False)
+    def SetControl(self):
+        print("Set Control Event Note")
+    def NoteOn(self, value=64, play=True):  #Parametre play a True => Send Midi Message Note On
+        self.Value = value
+        if play:
+            wx.PostEvent(self.parent, InternalMessage(self, value))
+    def NoteOff(self, play=True):  #Parametre play a True => Send Midi Message Note Off
+        self.Value = 0
+        if play:
+            wx.PostEvent(self.parent, InternalMessage(self, 0))
+    def Update(self, event):
+        value = event.GetValue()
+        if value:
+            self.NoteOn(value, False)
         else:
-            self.NoteOn(False)
+            self.NoteOff(False)
+        self.parent.Update()
     def SetInput(self, input_type='CC', address=[0,0], option = None):
-        wx.PostEvent(self, MessageRecord(self, self.Id, input_type, address, option))
+        wx.PostEvent(self.parent, MessageRecord(self, self.Id, input_type, address, option))
     def GetInputs(self):
         wx.PostEvent(self, MessageGet(self))
+    def GetMessage(self, event):
+        print("Input")
+        print event.GetType()
+        print event.GetAddress()
+
 class wxWhitePianoNote(wxPianoNote):
     def __init__(self, parent, ID, octave, note):
         wxPianoNote.__init__(self, parent, ID, octave, note)
@@ -397,7 +292,7 @@ class wxWhitePianoNote(wxPianoNote):
         self.size = size
         self.pos = pos
         paint.SetPen(wx.Pen('BLACK'))
-        if self.played:
+        if self.Value:
             paint.SetBrush(wx.Brush('RED'))
         else:
             paint.SetBrush(wx.Brush('WHITE'))
@@ -413,7 +308,7 @@ class wxBlackPianoNote(wxPianoNote):
         self.pos = pos
         new_size = [size[0], size[1] * 0.6]
         paint.SetPen(wx.Pen('WHITE'))
-        if self.played:
+        if self.Value:
             paint.SetBrush(wx.Brush('RED'))
         else:
             paint.SetBrush(wx.Brush('BLACK'))
@@ -426,6 +321,8 @@ class wxClock(wx.Panel):
     def __init__(self, parent, Id, signature=[4,4], beats_per_bar=4, ticks_per_beat = 24):
         self.parent = parent
         wx.Panel.__init__(self, parent)
+        EVT_WIDGET_MESSAGE(self, self.GetMessage)
+        EVT_WIDGET_UPDATE(self, self.Update)
         self.BeatsLights = []
         self.BeatsPerBar = beats_per_bar
         self.Beat = 0
@@ -434,6 +331,7 @@ class wxClock(wx.Panel):
         self.stopped = 0
         self.InitUI()
         self.InitClock()
+        
                 #Clock Raw Data
         #clock tick     = 248(10) F8(16)
         #clock stop     = 252(10) FC(16)
@@ -450,7 +348,9 @@ class wxClock(wx.Panel):
             hbox.Add(light, 0, wx.ALL, 2)
         self.SetSizer(hbox)
     def InitClock(self):
-        self.SetInput('Clock',['0xf8'])
+        self.SetInput('Clock', 248)
+        self.SetInput('Clock', 252)
+        self.SetInput('Clock', 250)
     def Update(self, input_type='Clock', address=248, value=1):
         if address == 248 and not self.stopped:
             self.AddTick()
@@ -478,5 +378,12 @@ class wxClock(wx.Panel):
         self.BeatsLights[self.Beat].SetBackgroundColour('GREEN')
     def SetInput(self, input_type='CC', address=[0,0], option = None):
         wx.PostEvent(self, MessageRecord(self, self.Id, input_type, address, option))
+    def UnSetInput(self, input_type='CC', address=[0,0], option = None):
+        wx.PostEvent(self, MessageUnRecord(self, self.FaderId, input_type, address, option))
+    def GetMessage(self, event):
+        print("Message")
+        print event.GetType()
+        print event.GetAddress()
     def GetInputs(self):
         wx.PostEvent(self, MessageGet(self))
+

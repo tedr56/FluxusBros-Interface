@@ -1,8 +1,7 @@
 import wx
-from CustomWidgets import wxMidiPanel
 from ClockGui import ClockPanel
 
-class MediaPanel(wxMidiPanel):
+class MediaPanel(wx.Panel):
     def __init__(self, *args, **kwargs):
         wx.Panel.__init__(self, *args, **kwargs)
         self.parent = args[0]

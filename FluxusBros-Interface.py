@@ -17,12 +17,6 @@ APP_SIZE_Y = 400
 class MyFrame(wx.Frame):
     def __init__(self, parent, ID, title):
         self.InitConfig(parent, ID, title)
-        #wx.Frame.__init__(self, parent, ID, title, wx.DefaultPosition, wx.Size(APP_SIZE_X, APP_SIZE_Y))
-        self.InputCC    = []
-        self.InputNote  = []
-        self.InputOSC   = []
-        self.InputSysEx = []
-        self.InputClock = []
         self.Dispatch = MessageDispatchRules(self)
         EVT_WIDGET_MESSAGE_RECORD(self, self.Dispatch.AddInMessage)
         EVT_WIDGET_MESSAGE_UNRECORD(self, self.Dispatch.DelInMessage)
@@ -36,7 +30,6 @@ class MyFrame(wx.Frame):
         self.cfg = ConfigParser.ConfigParser()
         f = "./config.cfg"
         self.cfg.read(f)
-        #if self.cfg.getint('App', 'width') and self.cfg.getint('App', 'height'):
         if self.cfg.has_section('App'):
             print("Config File")
             w, h = self.cfg.getint('App', 'width'), self.cfg.getint('App', 'height')
@@ -67,22 +60,6 @@ class MyFrame(wx.Frame):
         wx.PostEvent(self, ExternalMidiInMessage(midi_data))
     def MidiOutputRefresh(self, event):
         self.MidiConnect.sendMessage(event.GetMidiMessage())
-    def MidiOutDispatch(self, data):
-        print data
-        for m in data:
-            self.MidiConnect.sendMessage(m)
-    def SetControls(self, Callback, Inputs):
-        for CCin in Inputs['CC']:
-            self.InputCC.append([CCin, Callback])
-        for Notein in Inputs['Note']:
-            self.InputNote.append([Notein, Callback])
-        for OSCin in Inputs['OSC']:
-            self.InputOSC.append([OSCin, Callback])
-        for SysExin in Inputs['SysEx']:
-            self.InputSysEx.append([SysExin, Callback])
-        for Clockin in Inputs['Clock']:
-            self.InputClock.append([Clockin, Callback])
-
     def SetPlayer(self, event):
         print("New Player : %s" % event.GetEventObject().GetValue())
          
