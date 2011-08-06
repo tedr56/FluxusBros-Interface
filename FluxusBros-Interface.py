@@ -50,7 +50,7 @@ class MyFrame(wx.Frame):
         self.Table = TablePanel(self)
         self.Sequencer = SequencerPanel(self)
         hbox.Add(self.Media, proportion = 0, flag=wx.EXPAND)
-        hbox.Add(self.Table, proportion = 1, flag=wx.EXPAND)
+        hbox.Add(self.Table, proportion = 2, flag=wx.EXPAND)
         hbox.Add(self.Sequencer, proportion = 1, flag=wx.EXPAND)
         vbox.Add(hbox, proportion=-1, flag=wx.EXPAND)
         self.SetSizer(vbox)

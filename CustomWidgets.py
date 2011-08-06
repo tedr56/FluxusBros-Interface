@@ -96,7 +96,7 @@ class wxPianoRoll(wx.Panel):
         self.octaves = 4
         self.after_notes = 1
         self.start = 0
-        self.octaves_on_screen = 4
+        self.octaves_on_screen = 3
         self.after_notes_on_screen = 1
         self.first_note_on_screen = 0
         self.before_notes_on_screen = 0
