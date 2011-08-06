@@ -5,24 +5,17 @@ import numpy as np
 #import threading
 #import wx
 
-FluxusInClient = "FluxusMidi Input Client"
-FluxusInPort = "FluxusMidi Input Client:0"
-MicroKontrol_Out_Client = "microKontrol"
-MicroKontrol_Out_Port = "microKONTROL:1"
-VirtualKeyboard_Port = "Virtual Keyboard:0"
-Kmidimon_Port = "KMidimon:0"
+
 
 #Class to manage MIDI Connections
 class Connections:
-    def __init__(self, callback):
+    def __init__(self, callback, in_midi_wishes=[], out_midi_wishes=[]):
         self.midi_client_name = "FluxusBros-Interface"
         self.midi_in_port_name = "fluxusbros-in"
         self.midi_out_port_name = "fluxusbros-out"
         self.MidiIn = rtmidi.RtMidiIn(self.midi_client_name)
         self.MidiOut = rtmidi.RtMidiOut(self.midi_client_name)
         self.MidiIn.ignoreTypes(0,0,0)
-        #self.MidiIn.closePort()
-        #self.MidiOut.closePort()
         
         self.callback = callback
         self.MidiIn.setCallback(self.CallBack)
@@ -31,11 +24,10 @@ class Connections:
         
         self.port_in_wishes = []
         self.port_out_wishes = []
-        
-        self.add_in_port_wish(VirtualKeyboard_Port)
-        self.add_in_port_wish(MicroKontrol_Out_Port)
-        self.add_out_port_wish(FluxusInPort)
-        self.add_out_port_wish(Kmidimon_Port)
+        for in_wish in in_midi_wishes:
+            self.add_in_port_wish(in_wish)
+        for out_wish in out_midi_wishes:
+            self.add_out_port_wish(out_wish)
         self.refresh_connections()
 
     def sendMessage(self, message):

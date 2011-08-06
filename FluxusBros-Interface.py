@@ -9,13 +9,24 @@ from MessageDispatch import *
 from MediaGui import MediaPanel
 from TableGui import TablePanel
 from SequencerGui import SequencerPanel
-import ConfigParser
+from configobj import ConfigObj
 
 APP_SIZE_X = 900
 APP_SIZE_Y = 400
 
+FluxusInClient = "FluxusMidi Input Client"
+FluxusInPort = "FluxusMidi Input Client:0"
+MicroKontrol_Out_Client = "microKontrol"
+MicroKontrol_Out_Port = "microKONTROL:1"
+VirtualKeyboard_Port = "Virtual Keyboard:0"
+Kmidimon_Port = "KMidimon:0"
+
+INMIDIPORT = [MicroKontrol_Out_Port , VirtualKeyboard_Port]
+OUTMIDIPORT = [FluxusInPort , Kmidimon_Port]
+
 class MyFrame(wx.Frame):
     def __init__(self, parent, ID, title):
+        self.cfg = ConfigObj("./config.cfg")
         self.InitConfig(parent, ID, title)
         self.Dispatch = MessageDispatchRules(self)
         EVT_WIDGET_MESSAGE_RECORD(self, self.Dispatch.AddInMessage)
@@ -24,25 +35,29 @@ class MyFrame(wx.Frame):
         EVT_WIDGET_MESSAGE_UPDATE(self, self.Dispatch.InternalMessage)
         EVT_EXTERNAL_MIDI_IN_MESSAGE(self, self.Dispatch.ExternalMidiInMessage)
         EVT_EXTERNAL_MIDI_OUT_MESSAGE(self, self.MidiOutputRefresh)
-        self.InitMidi()
         self.InitPanels()
     def InitConfig(self, parent, ID, title):
-        self.cfg = ConfigParser.ConfigParser()
-        f = "./config.cfg"
-        self.cfg.read(f)
-        if self.cfg.has_section('App'):
+        if self.cfg['App']:
             print("Config File")
-            w, h = self.cfg.getint('App', 'width'), self.cfg.getint('App', 'height')
+            w , h = self.cfg['App'].as_int('width'), self.cfg['App'].as_int('height')
         else:
-            print("Default Config")
+            print("Defaults")
             w, h = (APP_SIZE_X, APP_SIZE_Y)
-            self.cfg.add_section('App')
-            self.cfg.set('App' , 'width', w)
-            self.cfg.set('App' , 'height', h)
-            self.cfg.write(open(f,"w"))
+            self.cfg['App']['width'] = w
+            self.cfg['App']['height'] = h
+            self.cfg.write()
         wx.Frame.__init__(self, parent, ID, title, wx.DefaultPosition, wx.Size(w, h))
-
-        
+        if 'MidiPort' in self.cfg:
+            inmidiport = self.cfg['MidiPort'].as_list('InPort')
+            outmidiport = self.cfg['MidiPort'].as_list('OutPort')
+        else:
+            inmidiport = INMIDIPORT
+            outmidiport = OUTMIDIPORT
+            self.cfg['MidiPort']={}
+            self.cfg['MidiPort']['InPort'] = inmidiport
+            self.cfg['MidiPort']['OutPort'] = outmidiport
+            self.cfg.write()
+        self.InitMidi(inmidiport, outmidiport)
     def InitPanels(self):
         vbox = wx.BoxSizer(wx.VERTICAL)
         hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -54,8 +69,8 @@ class MyFrame(wx.Frame):
         hbox.Add(self.Sequencer, proportion = 1, flag=wx.EXPAND)
         vbox.Add(hbox, proportion=-1, flag=wx.EXPAND)
         self.SetSizer(vbox)
-    def InitMidi(self):
-        self.MidiConnect = Connections(self.MidiInputRefresh)
+    def InitMidi(self, inmidi=[], outmidi=[]):
+        self.MidiConnect = Connections(self.MidiInputRefresh, inmidi, outmidi)
     def MidiInputRefresh(self, midi_data):
         wx.PostEvent(self, ExternalMidiInMessage(midi_data))
     def MidiOutputRefresh(self, event):
