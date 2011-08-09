@@ -23,11 +23,14 @@ class wxFader(wx.Slider):
         wx.Slider.__init__(self, *args, style = wx.SL_AUTOTICKS |  wx.SL_VERTICAL | wx.SL_LABELS | wx.SL_INVERSE, **kwargs)
         self.SetRange(0, 127)
         self.Bind(wx.EVT_RIGHT_DOWN, self.OnRightDown)
+        self.Bind(wx.EVT_MIDDLE_DOWN, self.OnMiddleDown)
         self.Bind(wx.EVT_COMMAND_SCROLL, self.OnScrolled)
         EVT_WIDGET_MESSAGE(self, self.GetMessage)
         EVT_WIDGET_UPDATE(self, self.WidgetUpdate)
     def OnRightDown(self,event):
         self.PopupMenu(ControlContextMenu(self), event.GetPosition())
+    def OnMiddleDown(self, event):
+        wx.PostEvent(self, MessageSequencerRecord(self))
     def OnScrolled(self, event):
         wx.PostEvent(self, InternalMessage(self, self.GetValue()))
     def SetInput(self, input_type='CC', address=[0,0], option = None):
@@ -321,7 +324,7 @@ class wxClock(wx.Panel):
     def __init__(self, parent, Id, signature=[4,4], beats_per_bar=4, ticks_per_beat = 24):
         self.parent = parent
         wx.Panel.__init__(self, parent)
-        EVT_WIDGET_MESSAGE(self, self.GetMessage)
+        #~ EVT_WIDGET_MESSAGE(self, self.GetMessage)
         EVT_WIDGET_UPDATE(self, self.Update)
         self.BeatsLights = []
         self.BeatsPerBar = beats_per_bar
@@ -380,10 +383,10 @@ class wxClock(wx.Panel):
         wx.PostEvent(self, MessageRecord(self, self.Id, input_type, address, option))
     def UnSetInput(self, input_type='CC', address=[0,0], option = None):
         wx.PostEvent(self, MessageUnRecord(self, self.FaderId, input_type, address, option))
-    def GetMessage(self, event):
-        print("Message")
-        print event.GetType()
-        print event.GetAddress()
+    #~ def GetMessage(self, event):
+        #~ print("Message")
+        #~ print event.GetType()
+        #~ print event.GetAddress()
     def GetInputs(self):
         wx.PostEvent(self, MessageGet(self))
 

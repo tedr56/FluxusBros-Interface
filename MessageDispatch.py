@@ -10,7 +10,7 @@ def EVT_WIDGET_MESSAGE(win, func):
     win.Connect(-1, -1, EVT_WIDGET_MESSAGE_ID, func)
 
 class Message(wx.PyCommandEvent):
-    def __init__(self, Object, Id, Type, Address, Option):
+    def __init__(self, Object, Id, Type, Address, Option=None):
         wx.PyCommandEvent.__init__(self)
         self.SetEventType(EVT_WIDGET_MESSAGE_ID)
         self.SetEventObject(Object)
@@ -51,13 +51,19 @@ def EVT_WIDGET_MESSAGE_GET(win, func):
     win.Connect(-1, -1, EVT_WIDGET_MESSAGE_GET_ID, func)
 
 class MessageGet(wx.PyCommandEvent):
-    def __init__(self, Object):
+    def __init__(self, Object, Source=None):
         wx.PyCommandEvent.__init__(self)
         self.SetEventType(EVT_WIDGET_MESSAGE_GET_ID)
         self.SetEventObject(Object)
         self.SetId(Object.GetId())
+        if Source:
+            self.Source = Source
+        else:
+            self.Source = Object
     def GetId(self):
         return self.Id
+    def GetSource(self):
+        return self.Source
 
 #Event from Widget signaling it have been updated
 EVT_WIDGET_MESSAGE_UPDATE_ID = wx.NewId()
@@ -126,11 +132,12 @@ class MessageDispatchRules(wx.PyEvtHandler):
         self.OutObjectMessages = dict()
         self.OutTypeMessages = dict()
     def SearchIndex(self, index, Table):
-        result = None
+        Result = None
         for i in range(len(Table)):
             if Table[i] == index:
-                result = i
-                return result
+                Result = i
+                break
+        return Result
     def AddInMessage(self, event):
         Object = event.GetEventObject()
         Id = event.GetId()
@@ -149,7 +156,11 @@ class MessageDispatchRules(wx.PyEvtHandler):
             self.OutTypeMessages[Type].append(MessagePos)
         else:
             self.OutTypeMessages[Type] = [MessagePos]
+        print self.OutObjectMessages
     def DelInMessage(self, event):
+        print("DelInMessage")
+        print self.OutObjectMessages
+        print self.OutTypeMessages
         Object = event.GetEventObject()
         Id = event.GetId()
         Type = event.GetType()
@@ -172,26 +183,55 @@ class MessageDispatchRules(wx.PyEvtHandler):
                         self.OutTypeMessages[Type].pop(index)
                         if len(self.OutTypeMessages[Type]) == 0:
                             del self.OutTypeMessages[Type]
+                    print self.OutObjectMessages
+                    print self.OutTypeMessages
+                    print range(MsgPos+1, len(self.OutMessages)+1)
                     for elmt in range(MsgPos, len(self.OutMessages)): #Shift all the next elements references -1
+                        print("Num : %i" % elmt)
                         Elmt = self.OutMessages[elmt]
                         ElmtType = Elmt.GetType()
                         ElmtId = Elmt.GetId()
-                        index = SearchIndex(elmt, self.OutObjectMessages[ElmtId])
-                        ElmtIndex = self.OutObjectMessages[ElmtId][index]
-                        self.self.OutObjectMessages[ElmtId].pop(index)
-                        self.self.OutObjectMessages[ElmtId].insert(ElmtIndex - 1, index)
-                        index = SearchIndex(elmt, self.OutTypeMessages[ElmtType])
-                        ElmtIndex = self.OutTypeMessages[ElmtType][index]
-                        self.self.OutTypeMessages[ElmtType].pop(index)
-                        self.self.OutTypeMessages[ElmtType].insert(ElmtIndex - 1, index)
+                        print("ElmtId : %i" % ElmtId)
+                        index2 = self.SearchIndex(elmt+1, self.OutObjectMessages[ElmtId])
+                        if not index2 == None:
+                            ElmtIndex = self.OutObjectMessages[ElmtId][index2]
+                            print("ElmtObjectIndex: %i" % ElmtIndex)
+                            print("ElmtObjectIndex-: %i" % (ElmtIndex-1))
+                            self.OutObjectMessages[ElmtId].pop(index2)
+                            self.OutObjectMessages[ElmtId].insert(index2, (ElmtIndex-1))
+                            index3 = self.SearchIndex(elmt+1, self.OutTypeMessages[ElmtType])
+                            if not index3 == None:
+                                ElmtIndex = self.OutTypeMessages[ElmtType][index3]
+                                print("ElmtTypeIndex: %i" % ElmtIndex)
+                                self.OutTypeMessages[ElmtType].pop(index3)
+                                self.OutTypeMessages[ElmtType].insert(index3, (ElmtIndex-1))
+                            else:
+                                print("Index3 not found")
+                                print len(self.OutMessages)
+                                print elmt
+                                print self.OutTypeMessages[ElmtType]
+                                print self.OutObjectMessages
+                        else:
+                            print("Index2 not found")
+                            print ElmtId
+                            print MsgPos
+                            print index2
+                            print len(self.OutMessages)
+                            print elmt
+                            print self.OutObjectMessages[ElmtId]
+                            print self.OutObjectMessages
+                    print self.OutObjectMessages
+                    print self.OutTypeMessages
+        else:
+            print("Element already deleted")
     def GetInMessage(self,event):
         Id = event.GetId()
         if Id in self.OutObjectMessages:
             for elmt in self.OutObjectMessages[Id]:
                 message = self.OutMessages[elmt]
-                wx.PostEvent(message.GetEventObject(), Message(message.GetEventObject(), message.GetId(), message.GetType(), message.GetAddress(), message.GetOption()))
+                wx.PostEvent(event.GetSource(), Message(message.GetEventObject(), message.GetId(), message.GetType(), message.GetAddress(), message.GetOption()))
         else:
-                wx.PostEvent(event.GetEventObject(), Message(event.GetEventObject(), event.GetId(), None, None, None))
+                wx.PostEvent(event.GetSource(), Message(event.GetEventObject(), event.GetId(), None, None, None))
     def InternalMessage(self, event):
         Object = event.GetEventObject()
         Id = event.GetId()
@@ -256,3 +296,14 @@ class MessageDispatchRules(wx.PyEvtHandler):
 #        print Address
 #        print Value
 
+
+EVT_WIDGET_SEQUENCER_MESSAGE_RECORD_ID = wx.NewId()
+def EVT_WIDGET_SEQUENCER_MESSAGE_RECORD(win, func):
+    win.Connect(-1, -1, EVT_WIDGET_SEQUENCER_MESSAGE_RECORD_ID, func)
+
+class MessageSequencerRecord(wx.PyCommandEvent):
+    def __init__(self, Object):
+        wx.PyCommandEvent.__init__(self)
+        self.SetEventType(EVT_WIDGET_SEQUENCER_MESSAGE_RECORD_ID)
+        self.SetEventObject(Object)
+        self.SetId(Object.GetId())

@@ -93,6 +93,7 @@ class MyFrame(wx.Frame):
         hbox.Add(self.Sequencer, proportion = 1, flag=wx.EXPAND)
         vbox.Add(hbox, proportion=-1, flag=wx.EXPAND)
         self.SetSizer(vbox)
+        EVT_WIDGET_SEQUENCER_MESSAGE_RECORD(self, self.Sequencer.InitSequence)
     def InitToolBar(self):
         toolbar = wx.ToolBar(self, -1)
         TOOL_ID = wx.NewId()
@@ -101,8 +102,8 @@ class MyFrame(wx.Frame):
         combo.SetStringSelection(self.DefaultPlayer)
         toolbar.AddControl(combo)
         wx.EVT_COMBOBOX(self, TOOL_ID_COMBO, self.SetPlayer)
-        Clock = ClockControl(toolbar)
-        toolbar.AddControl(Clock)
+        #~ Clock = ClockControl(toolbar, wx.NewId())
+        #~ toolbar.AddControl(Clock)
         bmp = wx.ArtProvider.GetBitmap(wx.ART_EXECUTABLE_FILE, wx.ART_OTHER, (16, 16))
         toolbar.AddSeparator()
         ToolbarPreferences = toolbar.AddLabelTool(-1, 'Preferences', bmp, shortHelp='Preferences')
