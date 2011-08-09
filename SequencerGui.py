@@ -2,6 +2,7 @@ import wx
 import rtmidi
 from MessageDispatch import *
 from wx.lib.scrolledpanel import ScrolledPanel
+from wx.lib.buttons import ThemedGenBitmapToggleButton
 
 class SequencerPanel(wx.Panel):
     def __init__(self, *args, **kwargs):
@@ -22,32 +23,18 @@ class SequencerWindow(ScrolledPanel):
         self.SetupScrolling(scroll_x=False, scroll_y=True)
         self.SequenceSizer = wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(self.SequenceSizer)
-        self.Sequences = []
     def InitSequence(self, event):
-        NewSequence = SequencePanel(self, len(self.Sequences), event)
+        NewSequence = SequencePanel(self, wx.NewId(), event)
         self.SequenceSizer.Add(NewSequence, proportion=0, flag=wx.EXPAND|wx.BOTTOM, border=2)
-        #~ self.Sequences.append(NewSequence)
         self.FitInside()
     def DelSequence(self, item):
-        #~ self.Sequences.pop(sequence)
-        #~ for s in range(sequence, len(self.Sequences)):
-            #~ self.Sequences[s].SetNumSequence(s.GetNumSequence() - 1)
-        print("ScrolledPanel DelSequence")
-        print item
         self.SequenceSizer.Remove(item)
-        print item
         self.Layout()
-        print("DelSequence End")
-        #~ wx.CallAfter(self.SequenceSizer.Remove,item)
-        #~ wx.CallAfter(self.Layout)
-        #~ self.Sequence[sequence].Destroy()
-        #~ -1 () a chaque sequences apres sequence
 
 class SequencePanel(wx.Panel):
-    def __init__(self, parent, num, event):
-        wx.Panel.__init__(self, parent, wx.NewId())
+    def __init__(self, parent, Id, event):
+        wx.Panel.__init__(self, parent, Id)
         self.parent = parent
-        self.NumSeq = num
         self.SeqEvent = []
         self.Paused = False
         EVT_WIDGET_MESSAGE(self, self.AddControl)
@@ -57,44 +44,73 @@ class SequencePanel(wx.Panel):
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         vbox = wx.BoxSizer(wx.VERTICAL)
         pause_bmp = wx.ArtProvider.GetBitmap(wx.ART_CROSS_MARK, wx.ART_OTHER, (16, 16))
+        clean_bmp = wx.ArtProvider.GetBitmap(wx.ART_DELETE, wx.ART_OTHER, (16, 16))
         del_bmp   = wx.ArtProvider.GetBitmap(wx.ART_QUIT, wx.ART_OTHER, (16, 16))
-        ID_BUTTON_QUIT = wx.NewId()
+        ID_BUTTON_QUIT  = wx.NewId()
         ID_BUTTON_PAUSE = wx.NewId()
-        button_pause = wx.BitmapButton(self, ID_BUTTON_PAUSE, pause_bmp)
+        ID_BUTTON_CLEAN = wx.NewId()
+        button_pause = ThemedGenBitmapToggleButton(self, ID_BUTTON_PAUSE, pause_bmp)
+        button_clean = wx.BitmapButton(self, ID_BUTTON_CLEAN, clean_bmp)
         button_del   = wx.BitmapButton(self, ID_BUTTON_QUIT, del_bmp)
         self.Bind(wx.EVT_BUTTON, self.Pause, id=ID_BUTTON_PAUSE)
+        self.Bind(wx.EVT_BUTTON, self.Clean, id=ID_BUTTON_CLEAN)
         self.Bind(wx.EVT_BUTTON, self.DelSequence, id=ID_BUTTON_QUIT)
         vbox.Add(button_pause, proportion = 0, flag=wx.EXPAND)
+        vbox.Add(button_clean, proportion = 0, flag=wx.EXPAND)
         vbox.Add(button_del, proportion = 0, flag=wx.EXPAND)
         hbox.Add(vbox, proportion = 0,flag=wx.EXPAND)
-        self.Sequence = wx.Panel(self, -1)
+        ID_SEQ_PANEL = wx.NewId()
+        self.Sequence = SequenceGraph(self, ID_SEQ_PANEL)
         self.Sequence.SetBackgroundColour('YELLOW')
         hbox.Add(self.Sequence, proportion = 1,flag=wx.EXPAND)
         self.SetSizer(hbox)
         wx.PostEvent(self, MessageGet(event.GetEventObject(), Source=self))
+        
     def GetNumSequence(self):
         return self.NumSequence
     def SetNumSequence(self, num):
         self.NumSequence = num
     def Pause(self, event):
-        if self.Pause:
-            self.Pause = False
+        print("Pause")
+        if self.Paused:
+            self.Paused = False
         else:
-            self.Pause = True
+            self.Paused = True
+        print self.Paused
+    def Clean(self, event):
+        print("Clean")
     def DelSequence(self, event):
         for event in self.SeqEvent:
             wx.PostEvent(self.parent, MessageUnRecord(self, self.GetId(), event.GetType(), event.GetAddress(), event.GetOption()))
-        self.DestroyChildren()
+        wx.CallAfter(self.DestroyChildren)
         self.parent.DelSequence(self)
         wx.CallAfter(self.Destroy)
-        
     def AddControl(self, event):
         wx.PostEvent(self.parent, MessageRecord(self, self.GetId(), event.GetType(), event.GetAddress(), event.GetOption()))
         self.SeqEvent.append(event)
     def Update(self, event):
         if not self.Paused:
-            print("Sequencer Widget Update")
-            print event.GetType()
-            print event.GetAddress()
-            print event.GetValue()
-            
+            self.Sequence.Update(event)
+class SequenceGraph(wx.Panel):
+    def __init__(self, parent, Id):
+        wx.Panel.__init__(self, parent, Id)
+        self.parent = parent
+        self.pDC = wx.PseudoDC()
+        self.Bind(wx.EVT_MIDDLE_DOWN, self.OnMiddleDown)
+        
+    def OnMiddleDown(self, event):
+        self.parent.DelSequence(event)
+    def OnPaint(self, event):
+        w, h = self.GetSize()
+        dc = wx.BufferedPaintDC(self)
+        self.PrepareDC(dc)
+        bg = wx.Brush(self.GetBackgroundColour())
+        dc.SetBackground(bg)
+        dc.Clear()
+        self.pDC.DrawToDC(dc)
+    def DrawGraph(self):
+        print("DrawGraph")
+        
+    def Update(self, event):
+        GraphSize = self.GetSize()
+        print("Graph Update")
