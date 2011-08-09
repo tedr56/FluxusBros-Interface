@@ -23,7 +23,7 @@ class TablePanel(wx.Panel):
         self.knob6 = wxKnob(self)
         self.knob7 = wxKnob(self)
         self.knob8 = wxKnob(self)
-        self.Bind(EVT_KC_ANGLE_CHANGING, self.OnKnobChanged, self.knob1)
+        #~ self.Bind(EVT_KC_ANGLE_CHANGING, self.OnKnobChanged, self.knob1)
 #        hbox0.Add(self.knob1, proportion=1, flag=wx.EXPAND|wx.ALL, border=3)
 #        hbox0.Add(self.knob2, proportion=1, flag=wx.EXPAND|wx.ALL, border=3)
 #        hbox0.Add(self.knob3, proportion=1, flag=wx.EXPAND|wx.ALL, border=3)

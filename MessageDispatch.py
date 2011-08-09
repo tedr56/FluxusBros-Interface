@@ -125,7 +125,7 @@ class ExternalMidiOutMessage(wx.PyCommandEvent):
 
 #Main Messages Dispatch Class
 class MessageDispatchRules(wx.PyEvtHandler):
-    def __init__(self, parent):
+    def __init__(self, parent, clock_signature=4):
         wx.PyEvtHandler.__init__(self)
         self.parent = parent
         self.OutMessages = []
@@ -144,19 +144,26 @@ class MessageDispatchRules(wx.PyEvtHandler):
         Type = event.GetType()
         Address = event.GetAddress()
         Option  = event.GetOption()
-        
-        MessagePos  = len(self.OutMessages)
-        OutMessages = event
-        self.OutMessages.append(OutMessages)
+        MessageAlreadyRecorded = False
         if Id in self.OutObjectMessages:
-            self.OutObjectMessages[Id].append(MessagePos)
-        else:
-            self.OutObjectMessages[Id] = [MessagePos]
-        if Type in self.OutTypeMessages:
-            self.OutTypeMessages[Type].append(MessagePos)
-        else:
-            self.OutTypeMessages[Type] = [MessagePos]
-        print self.OutObjectMessages
+            for e in self.OutObjectMessages[Id]:
+                evt = self.OutMessages[e]
+                if evt.GetType() == Type and evt.GetAddress() == Address and evt.GetOption() == Option:
+                    print("Message Already Registered")
+                    MessageAlreadyRecorded = True
+                    break
+        if not MessageAlreadyRecorded:
+            MessagePos  = len(self.OutMessages)
+            self.OutMessages.append(event)
+            if Id in self.OutObjectMessages:
+                self.OutObjectMessages[Id].append(MessagePos)
+            else:
+                self.OutObjectMessages[Id] = [MessagePos]
+            if Type in self.OutTypeMessages:
+                self.OutTypeMessages[Type].append(MessagePos)
+            else:
+                self.OutTypeMessages[Type] = [MessagePos]
+            print self.OutObjectMessages
     def DelInMessage(self, event):
         print("DelInMessage")
         print self.OutObjectMessages

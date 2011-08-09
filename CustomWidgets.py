@@ -53,16 +53,21 @@ class wxKnob(KnobCtrl):
     def __init__(self, parent, id=-1, size=(20, 20)):
         #KnobCtrl.__init__(self, *args, **kwargs)
         KnobCtrl.__init__(self, parent, id, size)
-        self.SetTags(range(0,127,1))
-        self.SetAngularRange(-45, 225)
-        self.SetValue(45)
-        self.Bind(EVT_KC_ANGLE_CHANGED, self.OnAngleChanged, self)
+        self.SetTags(range(0,128,1))
+        print self.GetMaxValue()
+        #self.SetAngularRange(-225, 225)
+        self.SetValue(0)
+        self.Bind(EVT_KC_ANGLE_CHANGED, self.OnAngleChanged)
+        #~ self.
         #self.SetFirstGradientColour(wx.Colour(255,0,0,255))
         #self.SetSecondGradientColour(wx.Colour(255,255,0,255))
         #self.SetBoundingColour(wx.Colour(0,255,0,255))
         #self.SetTagsColour(wx.Colour(0,0,255,192))
     def OnAngleChanged(self, event):
         print("Knob Scroll: %i" % event.GetValue())
+        self.SetValue(event.GetValue())
+    def DrawTags(self, dc, size):
+        None
 class wxPiano(wx.Panel):
     def __init__(self, *args, **kwargs):
         wx.Panel.__init__(self, *args, **kwargs)
