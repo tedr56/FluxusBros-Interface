@@ -30,7 +30,7 @@ class wxFader(wx.Slider):
     def OnRightDown(self,event):
         self.PopupMenu(ControlContextMenu(self), event.GetPosition())
     def OnMiddleDown(self, event):
-        wx.PostEvent(self, MessageSequencerRecord(self))
+        wx.PostEvent(self, MessageSequencerRecord(self, self.GetValue()))
     def OnScrolled(self, event):
         wx.PostEvent(self, InternalMessage(self, self.GetValue()))
     def SetInput(self, input_type='CC', address=[0,0], option = None):
@@ -54,7 +54,6 @@ class wxKnob(KnobCtrl):
         #KnobCtrl.__init__(self, *args, **kwargs)
         KnobCtrl.__init__(self, parent, id, size)
         self.SetTags(range(0,128,1))
-        print self.GetMaxValue()
         #self.SetAngularRange(-225, 225)
         self.SetValue(0)
         self.Bind(EVT_KC_ANGLE_CHANGED, self.OnAngleChanged)
