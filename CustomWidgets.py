@@ -50,20 +50,23 @@ class wxCrossFader(wxFader):
         wxFader.__init__(self, *args, style = wx.SL_AUTOTICKS |  wx.SL_HORIZONTAL | wx.SL_LABELS | wx.SL_INVERSE, **kwargs)
 
 class wxKnob(KnobCtrl):
-    def __init__(self, parent, id=-1, size=(20, 20)):
-        #KnobCtrl.__init__(self, *args, **kwargs)
-        KnobCtrl.__init__(self, parent, id, size)
+    def __init__(self, parent, Id=wx.NewId(), size=(20, 20)):
+        KnobCtrl.__init__(self, parent, Id, size)
         self.SetTags(range(0,128,1))
-        #self.SetAngularRange(-225, 225)
         self.SetValue(0)
         self.Bind(EVT_KC_ANGLE_CHANGED, self.OnAngleChanged)
-        #~ self.
-        #self.SetFirstGradientColour(wx.Colour(255,0,0,255))
-        #self.SetSecondGradientColour(wx.Colour(255,255,0,255))
-        #self.SetBoundingColour(wx.Colour(0,255,0,255))
-        #self.SetTagsColour(wx.Colour(0,0,255,192))
+        self.Bind(wx.EVT_MIDDLE_DOWN, self.OnMiddleDown)
+        EVT_WIDGET_UPDATE(self, self.WidgetUpdate)
+    def OnMiddleDown(self, event):
+        wx.PostEvent(self, MessageSequencerRecord(self, self.GetValue()))
     def OnAngleChanged(self, event):
-        print("Knob Scroll: %i" % event.GetValue())
+        self.SetValue(event.GetValue())
+        wx.PostEvent(self, InternalMessage(self, self.GetValue()))
+    def SetInput(self, input_type='CC', address=[0,0], option = None):
+        wx.PostEvent(self, MessageRecord(self, self.GetId(), input_type, address, option))
+    def UnSetInput(self, input_type='CC', address=[0,0], option = None):
+        wx.PostEvent(self, MessageUnRecord(self, self.GetId(), input_type, address, option))
+    def WidgetUpdate(self, event):
         self.SetValue(event.GetValue())
     def DrawTags(self, dc, size):
         None
@@ -119,6 +122,8 @@ class wxPianoRoll(wx.Panel):
         self.Bind(wx.EVT_RIGHT_DOWN, self.OnRightDown)
         self.Bind(wx.EVT_LEFT_DOWN, self.OnLeftDown)
         self.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
+        self.Bind(wx.EVT_MIDDLE_DOWN, self.OnMiddleDown)
+
 
     def InitNotes(self, dc):
         midichannel = self.DefaultMidiChannel
@@ -217,6 +222,10 @@ class wxPianoRoll(wx.Panel):
             return num_note
         else:
             return None
+    def OnMiddleDown(self, event):
+        note = self.FindNote(event)
+        if not note == None:
+            self.Notes[note].OnMiddleDown(event)
     def OnRightDown(self,event):
         note = self.FindNote(event)
         if not note == None:
@@ -265,7 +274,9 @@ class wxPianoNote(wx.PyEvtHandler):
     def DrawNote(self, paint):
         paint.DrawRectanglePointSize(self.pos,self.size)
     def OnRightDown(self,event):
-        event.GetEventObject().PopupMenu(ControlContextMenu(self), event.GetPosition())        
+        event.GetEventObject().PopupMenu(ControlContextMenu(self), event.GetPosition())
+    def OnMiddleDown(self, event):
+        wx.PostEvent(self.parent, MessageSequencerRecord(self, self.GetValue()))
     def SetControl(self):
         print("Set Control Event Note")
     def NoteOn(self, value=64, play=True):  #Parametre play a True => Send Midi Message Note On
