@@ -1,5 +1,6 @@
 import wx
 from CustomWidgets import wxClock
+from CustomWidgets import InternalClock
 
 class ClockPanel(wx.Panel):
     def __init__(self, *args, **kwargs):
@@ -19,6 +20,8 @@ class ClockControl(wx.PyControl):
         wx.PyControl.__init__(self, *args, **kwargs)
         self.parent = args[0]
         self.InitUI()
+        #~ print("Clock")
+        self.internClock = InternalClock(self)
     def InitUI(self):
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         text = wx.StaticText(self, -1, "Clock: ")
@@ -28,6 +31,14 @@ class ClockControl(wx.PyControl):
         self.SetSizerAndFit(hbox)
         #self.Fit()
         self.Layout()
-        #~ self.SetBestSize(
+    def SetBpm(self, bpm):
+        print bpm
+    def SetClockMode(self, Mode):
+        if Mode == 'Internal':
+            self.internClock = InternalClock(self)
+        elif Mode == 'External':
+            if self.internClock:
+                self.internClock.Stop()
+        
 
 
