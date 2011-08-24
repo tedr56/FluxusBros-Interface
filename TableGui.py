@@ -62,10 +62,10 @@ class TablePanel(wx.Panel):
         hbox1.Add(self.fader8, proportion=1, flag=wx.EXPAND|wx.ALL, border=3)
         vbox.Add(hbox1, proportion=2, flag=wx.EXPAND|wx.ALL)
         hbox2 = wx.BoxSizer(wx.HORIZONTAL)
-        #self.piano = wxPiano(self)
-        #self.Bind(wx.EVT_MOUSE_EVENTS, self.OnPianoChanged, self.piano)
-        #hbox2.Add(self.piano,proportion = 1,flag=wx.EXPAND)
-        #vbox.Add(hbox2,proportion=1, flag=wx.EXPAND)
+        self.piano = wxPiano(self)
+        #~ self.Bind(wx.EVT_MOUSE_EVENTS, self.OnPianoChanged, self.piano)
+        hbox2.Add(self.piano,proportion = 1,flag=wx.EXPAND)
+        vbox.Add(hbox2,proportion=1, flag=wx.EXPAND)
         self.SetSizer(vbox)
 
         
@@ -83,6 +83,7 @@ class TablePanel(wx.Panel):
         #~ self.parent.MidiOutputRefresh(message)
         
     def InitControls(self):
+        self.knob1.SetInput(input_type = 'CC', address = [2,16])
         self.fader1.SetInput(input_type = 'CC', address = [2,24])
         self.fader2.SetInput(input_type = 'CC', address = [2,25])
         self.fader3.SetInput(input_type = 'Note', address = [1,48])

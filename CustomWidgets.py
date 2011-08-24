@@ -2,9 +2,45 @@ import wx
 from wx.lib.agw.knobctrl import *
 from MessageDispatch import *
 import rtmidi
+import time
+#~ import  thread
+from threading import Thread
+import MidiVars
 
-MIDI_CLOCK_TICK = 0x48
-
+#~ class Control(wx.PyEvtHandler):
+    #~ def __init__(self, parent):
+        #~ wx.PyEvtHandler.__init__(self)
+        #~ self.parent = parent
+        #~ self.Id = wx.NewId()
+        #~ EVT_WIDGET_MESSAGE(self, self.GetInputEvent)
+        #~ EVT_WIDGET_UPDATE(self, self.Update)
+        #~ EVT_WIDGET_SEQUENCER_MESSAGE_RECORD(self, self.RecordEvent)
+        #~ EVT_WIDGET_SEQUENCER_MESSAGE_UNRECORD(self, self.UnRecordEvent)
+    #~ def GetId(self):
+        #~ return self.Id
+    #~ def SetInput(self, Type, Address, Option=None):
+        #~ wx.PostEvent(self, MessageRecord(self, self.Id, Type, Address, Option))
+    #~ def UnSetInput(self, Type, Address, Option=None):
+        #~ wx.PostEvent(self, MessageUnRecord(self, self.Id, Type, Address, Option))
+    #~ def SetRecord(self):
+        #~ wx.PostEvent(self, MessageSequencerRecord(self, self.parent.GetValue()))
+    #~ def UnSetRecord(self):
+        #~ wx.PostEvent(self, MessageSequencerUnRecord(self))
+    #~ def GetInputEvent(self):
+        #~ print("Control Input Message Infos")
+        #~ print event.GetType()
+        #~ print event.GetAddress()
+    #~ def Update(self, event):
+        #~ self.parent.SetValue(event.GetValue())
+    #~ def WidgetUpdate(self, event):
+        #~ wx.PostEvent(self, InternalMessage(self, evnt.GetValue()))
+    #~ def RecordEvent(self, event):
+        #~ self.parent.SetRecording()
+    #~ def UnRecordEvent(self, event):
+        #~ self.parent.SetUnRecording()
+    #~ def Context(self, event):
+        #~ self.PopupMenu(ControlContextMenu(self), event.GetPosition())
+    
 class ControlContextMenu(wx.Menu):
     def __init__(self, parent):
         wx.Menu.__init__(self)
@@ -15,28 +51,99 @@ class ControlContextMenu(wx.Menu):
 
     def OnSetControl(self, event):
         self.parent.SetControl()
+        ControlMessage = wx.Dialog(self)
+    def GetParent(self):
+        return self.parent
          
-class wxFader(wx.Slider):
+class wxFader(wx.Panel):
     def __init__(self, *args,  **kwargs):
+        wx.Panel.__init__(self, *args, **kwargs)
+        box = wx.BoxSizer()
+        self.Fader = wxFaderWidget(self)
+        box.Add(self.Fader, proportion=1, flag = wx.EXPAND)
+        self.SetSizer(box)
+        self.InitialBackground = self.GetBackgroundColour()
+        self.InitialBackgroundStyle = self.GetBackgroundStyle()
+        self.InitialWindowStyle = self.GetWindowStyle()
+        #~ print("wxFader debug")
+        #~ print self.GetBackgroundStyle()
+        #~ print self.HasTransparentBackground()
+    def SetInput(self, *args,  **kwargs):
+        self.Fader.SetInput(*args,  **kwargs)
+    def UnSetInput(self, *args,  **kwargs):
+        self.Fader.UnSetInput(*args,  **kwargs)
+    def SetRecord(self):
+        self.SetBackgroundColour('YELLOW')
+    def UnSetRecord(self):
+        self.SetBackgroundColour(self.InitialBackground)
+        self.SetBackgroundStyle(self.InitialBackgroundStyle)
+        self.SetWindowStyle(self.InitialWindowStyle)
+#~ class wxFaderWidget2(wx.Slider):
+    #~ def __init__(self, *args,  **kwargs):
+        #~ wx.Slider.__init__(self, *args, style = wx.SL_AUTOTICKS |  wx.SL_VERTICAL | wx.SL_LABELS | wx.SL_INVERSE, **kwargs)
+        #~ self.SetRange(0, 127)
+        #~ self.SeqRecord = False
+        #~ self.Bind(wx.EVT_RIGHT_DOWN, self.OnRightDown)
+        #~ self.Bind(wx.EVT_MIDDLE_DOWN, self.OnMiddleDown)
+        #~ self.Bind(wx.EVT_COMMAND_SCROLL, self.OnScrolled)
+        #~ self.control = Control(self)
+    #~ def OnRightDown(self, event):
+        #~ self.control.WidgetUpdate(event)
+    #~ def OnMiddleDown(self, event):
+        #~ if self.SeqRecord:
+            #~ self.control.UnRecord()
+        #~ else:
+            #~ self.control.Record()
+    #~ def SetRecording(self):
+        #~ self.SeqRecord = True
+        #~ self.GetParent().SetRecord()
+    #~ def UnSetRecording(self):
+        #~ self.SeqRecord = False
+        #~ self.GetParent().UnSetRecord()
+        
+class wxFaderWidget(wx.Slider):
+    def __init__(self, *args,  **kwargs):
+        wx.Slider.__init__(self, *args, id=wx.NewId(), style = wx.SL_AUTOTICKS |  wx.SL_VERTICAL | wx.SL_LABELS | wx.SL_INVERSE, **kwargs)
         self.parent = args[0]
-        self.FaderId = args[1]
-        wx.Slider.__init__(self, *args, style = wx.SL_AUTOTICKS |  wx.SL_VERTICAL | wx.SL_LABELS | wx.SL_INVERSE, **kwargs)
         self.SetRange(0, 127)
+        self.SeqRecord = False
         self.Bind(wx.EVT_RIGHT_DOWN, self.OnRightDown)
         self.Bind(wx.EVT_MIDDLE_DOWN, self.OnMiddleDown)
         self.Bind(wx.EVT_COMMAND_SCROLL, self.OnScrolled)
         EVT_WIDGET_MESSAGE(self, self.GetMessage)
         EVT_WIDGET_UPDATE(self, self.WidgetUpdate)
+        EVT_WIDGET_SEQUENCER_MESSAGE_RECORD(self, self.RecordEvent)
+        EVT_WIDGET_SEQUENCER_MESSAGE_UNRECORD(self, self.UnRecordEvent)
+    def UnRecordEvent(self, event):
+        if self.SeqRecord:
+            self.UnRecord()
+    def RecordEvent(self, event):
+        if not self.SeqRecord:
+            self.Record()
+    def Record(self):
+        self.GetParent().SetRecord()
+        self.SeqRecord = True
+    def UnRecord(self):
+        self.GetParent().UnSetRecord()
+        self.SeqRecord = False
     def OnRightDown(self,event):
         self.PopupMenu(ControlContextMenu(self), event.GetPosition())
+    #~ def GetOptions(self):
+        
     def OnMiddleDown(self, event):
-        wx.PostEvent(self, MessageSequencerRecord(self, self.GetValue()))
+        #~ print self.GetParent()
+        if self.SeqRecord:
+            wx.PostEvent(self.parent, MessageSequencerUnRecord(self))
+            self.UnRecord()
+        else:
+            wx.PostEvent(self.parent, MessageSequencerRecord(self, self.GetValue()))
+            self.Record()
     def OnScrolled(self, event):
         wx.PostEvent(self, InternalMessage(self, self.GetValue()))
     def SetInput(self, input_type='CC', address=[0,0], option = None):
-        wx.PostEvent(self, MessageRecord(self, self.FaderId, input_type, address, option))
+        wx.PostEvent(self, MessageRecord(self, self.GetId(), input_type, address, option))
     def UnSetInput(self, input_type='CC', address=[0,0], option = None):
-        wx.PostEvent(self, MessageUnRecord(self, self.FaderId, input_type, address, option))
+        wx.PostEvent(self, MessageUnRecord(self, self.GetId(), input_type, address, option))
     def GetMessage(self, event):
         print("Message")
         print event.GetType()
@@ -52,13 +159,32 @@ class wxCrossFader(wxFader):
 class wxKnob(KnobCtrl):
     def __init__(self, parent, Id=wx.NewId(), size=(20, 20)):
         KnobCtrl.__init__(self, parent, Id, size)
+        self.parent = parent
         self.SetTags(range(0,128,1))
         self.SetValue(0)
+        self.SeqRecord = False
         self.Bind(EVT_KC_ANGLE_CHANGED, self.OnAngleChanged)
         self.Bind(wx.EVT_MIDDLE_DOWN, self.OnMiddleDown)
         EVT_WIDGET_UPDATE(self, self.WidgetUpdate)
+        EVT_WIDGET_SEQUENCER_MESSAGE_RECORD(self, self.RecordEvent)
+        EVT_WIDGET_SEQUENCER_MESSAGE_UNRECORD(self, self.UnRecordEvent)
+    def UnRecordEvent(self, event):
+        if self.SeqRecord:
+            self.UnRecord()
+    def RecordEvent(self, event):
+        if not self.SeqRecord:
+            self.Record()
+    def Record(self):
+        self.SeqRecord = True
+    def UnRecord(self):
+        self.SeqRecord = False
     def OnMiddleDown(self, event):
-        wx.PostEvent(self, MessageSequencerRecord(self, self.GetValue()))
+        if self.SeqRecord:
+            wx.PostEvent(self.parent, MessageSequencerUnRecord(self))
+            self.UnRecord()
+        else:
+            wx.PostEvent(self.parent, MessageSequencerRecord(self, self.GetValue()))
+            self.Record()
     def OnAngleChanged(self, event):
         self.SetValue(event.GetValue())
         wx.PostEvent(self, InternalMessage(self, self.GetValue()))
@@ -258,9 +384,28 @@ class wxPianoNote(wx.PyEvtHandler):
         self.size = wx.Size(0,0)
         self.pos = wx.Point(0,0)
         self.Value = 0
+        self.SeqRecord = False
         EVT_WIDGET_MESSAGE(self, self.GetMessage)
         EVT_WIDGET_UPDATE(self, self.Update)
-
+        EVT_WIDGET_SEQUENCER_MESSAGE_RECORD(self, self.RecordEvent)
+        EVT_WIDGET_SEQUENCER_MESSAGE_UNRECORD(self, self.UnRecordEvent)
+    def UnRecordEvent(self, event):
+        if self.SeqRecord:
+            self.UnRecord()
+    def RecordEvent(self, event):
+        if not self.SeqRecord:
+            self.Record()
+    def Record(self):
+        self.SeqRecord = True
+    def UnRecord(self):
+        self.SeqRecord = False
+    def OnMiddleDown(self, event):
+        if self.SeqRecord:
+            wx.PostEvent(self.parent, MessageSequencerUnRecord(self))
+            self.UnRecord()
+        else:
+            wx.PostEvent(self.parent, MessageSequencerRecord(self, self.GetValue()))
+            self.Record()
     def GetId(self):
         return self.Id
     def GetPos(self):
@@ -268,15 +413,13 @@ class wxPianoNote(wx.PyEvtHandler):
     def GetSize(self):
         return self.size
     def GetValue(self):
-        self.Value
+        return self.Value
     def UpdateDC(self, paint, pos, size):
         self.DrawNote(paint)
     def DrawNote(self, paint):
         paint.DrawRectanglePointSize(self.pos,self.size)
     def OnRightDown(self,event):
         event.GetEventObject().PopupMenu(ControlContextMenu(self), event.GetPosition())
-    def OnMiddleDown(self, event):
-        wx.PostEvent(self.parent, MessageSequencerRecord(self, self.GetValue()))
     def SetControl(self):
         print("Set Control Event Note")
     def NoteOn(self, value=64, play=True):  #Parametre play a True => Send Midi Message Note On
@@ -350,11 +493,7 @@ class wxClock(wx.Panel):
         self.InitUI()
         self.InitClock()
         
-                #Clock Raw Data
-        #clock tick     = 248(10) F8(16)
-        #clock stop     = 252(10) FC(16)
-        #clock start    = 250(10) FA(16)
-        #clock continue = 251(10) FB(16)
+
 
     def InitUI(self):
         hbox = wx.BoxSizer(wx.HORIZONTAL)
@@ -369,7 +508,10 @@ class wxClock(wx.Panel):
         self.SetInput('Clock', 248)
         self.SetInput('Clock', 252)
         self.SetInput('Clock', 250)
-    def Update(self, input_type='Clock', address=248, value=1):
+    #~ def Update(self, input_type='Clock', address=248, value=1):
+    def Update(self, event):
+        address = event.GetAddress()
+        #~ print("Clock Update")
         if address == 248 and not self.stopped:
             self.AddTick()
         elif address == 252:
@@ -395,9 +537,9 @@ class wxClock(wx.Panel):
             self.Beat = 0
         self.BeatsLights[self.Beat].SetBackgroundColour('GREEN')
     def SetInput(self, input_type='CC', address=[0,0], option = None):
-        wx.PostEvent(self, MessageRecord(self, self.Id, input_type, address, option))
+        wx.PostEvent(self.parent, MessageRecord(self, self.Id, input_type, address, option))
     def UnSetInput(self, input_type='CC', address=[0,0], option = None):
-        wx.PostEvent(self, MessageUnRecord(self, self.FaderId, input_type, address, option))
+        wx.PostEvent(self.parent, MessageUnRecord(self, self.FaderId, input_type, address, option))
     #~ def GetMessage(self, event):
         #~ print("Message")
         #~ print event.GetType()
@@ -405,3 +547,43 @@ class wxClock(wx.Panel):
     def GetInputs(self):
         wx.PostEvent(self, MessageGet(self))
 
+
+class InternalClock(wx.PyEvtHandler, Thread):
+    def __init__(self, parent, Id=wx.NewId()):
+        wx.PyEvtHandler.__init__(self)
+        Thread.__init__(self)
+        self.parent = parent
+        self.Id = Id
+        print("InternalClock")
+        self.SetBpm(120)
+        print("Bpm:%i" % self.bpm)
+        self.KeepGoing = True
+        wx.PostEvent(self.parent, MessageRecord(self, self.Id, Type = 'Clock', Address = 248))
+        EVT_WIDGET_UPDATE(self, self.WidgetUpdate)
+        #~ thread.start_new_thread(self.run, ())
+        self.start()
+    def SetBpm(self, bpm):
+        self.bpm = bpm
+        self.dTime = bpm * 24.0
+        self.dTick = 60 / self.dTime
+        #~ self.dTick = self.dTime
+        #~ self.dTick = 1
+    def run(self):
+        while self.KeepGoing:
+            #~ print("InternalClock Id")
+            #~ print self.Id
+            #~ print self.KeepGoing
+            #~ print self.dTick
+            time.sleep(self.dTick)
+            wx.PostEvent(self.parent, InternalMessage(self, 1))
+            #~ wx.CallAfter(wx.PostEvent, self.parent, InternalMessage(self, 1))
+        wx.PostEvent(self.parent, MessageUnRecord(self, self.Id, Type = 'Clock', Address = 248))
+        self.parent.SetClockMode('External')
+        return None
+    def WidgetUpdate(self, event):
+        print ("INTERNAL CLOCK WIDGET UPDATE")
+        self.Stop()
+    def Stop(self):
+        self.KeepGoing = False
+    def GetId(self):
+        return self.Id

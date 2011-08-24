@@ -8,6 +8,8 @@ class SequencerPanel(wx.Panel):
     def __init__(self, *args, **kwargs):
         wx.Panel.__init__(self, *args, **kwargs)
         self.InitUI()
+        wx.PostEvent(self, SequencerRecord(self))
+        EVT_WIDGET_SEQUENCER_MESSAGE_RECORD(self, self.InitSequence)
     def InitUI(self):
         vbox = wx.BoxSizer(wx.VERTICAL)
         self.SequencesWindow = SequencerWindow(self, wx.NewId())
@@ -15,7 +17,8 @@ class SequencerPanel(wx.Panel):
         self.SetSizer(vbox)
     def InitSequence(self, event):
         self.SequencesWindow.InitSequence(event)
-
+    def DelSequence(self, event):
+        print("Sequencer DelSequence from Widget")
 class SequencerWindow(ScrolledPanel):
     def __init__(self, *args, **kwargs):
         ScrolledPanel.__init__(self, *args, **kwargs)
@@ -68,7 +71,7 @@ class SequencePanel(wx.Panel):
         hbox.Add(self.Sequence, proportion = 1,flag=wx.EXPAND)
         self.SetSizer(hbox)
         wx.PostEvent(self, MessageGet(event.GetEventObject(), Source=self))
-        
+        EVT_WIDGET_SEQUENCER_MESSAGE_UNRECORD(self, self.Sequence.DelSequence)
     def GetNumSequence(self):
         return self.NumSequence
     def SetNumSequence(self, num):
@@ -85,16 +88,18 @@ class SequencePanel(wx.Panel):
     def Clean(self, event):
         print("Clean")
     def DelSequence(self, e):
-        print("SeqPanel Del")
+        #~ print("SeqPanel Del")
         for event in self.SeqEvent:
             wx.PostEvent(self.parent, MessageUnRecord(self, self.GetId(), event.GetType(), event.GetAddress(), event.GetOption()))
+        
         wx.CallAfter(self.DestroyChildren)
         wx.CallAfter(self.Destroy)
         #~ wx.CallAfter(self.parent.DelSequence,self)
         self.parent.DelSequence(self)
         #wx.CallAfter(self.DestroyChildren)
         
-        
+    def UnRecordMessage(self):
+        wx.PostEvent(self.parent, MessageSequencerUnRecord(self))
     def AddControl(self, event):
         wx.PostEvent(self.parent, MessageRecord(self, self.GetId(), event.GetType(), event.GetAddress(), event.GetOption()))
         self.SeqEvent.append(event)
@@ -106,32 +111,40 @@ class SequenceGraph(wx.Panel):
         wx.Panel.__init__(self, parent, Id)
         self.parent = parent
         self.pDC = wx.PseudoDC()
+        ## Events
         self.Bind(wx.EVT_MIDDLE_DOWN, self.OnMiddleDown)
         EVT_WIDGET_UPDATE(self, self.ClockUpdate)
+        EVT_WIDGET_SEQUENCER_MESSAGE_UNRECORD(self, self.DelSequence)
         self.Bind(wx.EVT_SIZE , self.OnSize)
         self.Bind(wx.EVT_PAINT, self.OnPaint)
+        ## Sequences Stocking Variables
         first_seq = {'Time': 0 , 'Value': Value, 'Id' : wx.NewId(), 'Color' : 'BLUE'}
         second_seq= {'Time': 69 , 'Value': 69, 'Id' : wx.NewId(), 'Color' : 'BLUE'}
-        self.Seq = []           #Store Sequence Messages + Time + ID + Color
-        self.SeqN = 1           #Store Sequence Cursor
-        self.SeqTime = None     #Store Time ID
-        self.Time = 0           #Store Current Time Tick
-        self.TimeLock = False   #Store Lock if Seq already recorded on Tick Time
-        self.Bars = 4           #Store Showed Bars Number
-        self.BarsSeq = 2        #Store Sequenced Bars Number
-        self.ClockEvts = True    #Store START CONTINUE STOP Clock Events
+        self.Seq = []               #Store Sequence Messages + Time + ID + Color
+        self.SeqN = 1               #Store Sequence Cursor
+        self.SeqTime = None         #Store Time ID
+        ## Time Parsing Variables
+        self.Time = 0               #Store Current Time Tick
+        self.TimeLock = False       #Store Lock if Seq already recorded on Tick Time
+        self.Bars = 4               #Store Showed Bars Number
+        self.BarsSeq = 4            #Store Sequenced Bars Number
+        ## Sequencer Config Variables
+        self.ClockEvts = True       #Store START CONTINUE STOP Clock Events
+        self.ExtFirstUpdate = True  #Store if First Update set the First Seq
         self.Locked = False
         self.SubLocked = False
         self.Record = False
+        ## Display Variables
         self.dTime = None
         self.SizeX = None
         self.SizeY = None
         self.OnSize(None)
+        ## Init Sequencer
         self.Seq.append(first_seq)
-        self.Seq.append(second_seq)
-        #~ self.NextSeq = self.Seq[self.SeqN]
-        self.NextSeq = second_seq
+        #self.Seq.append(second_seq)
         self.FakeSeq = {'Time': (self.Bars * 25) , 'Value': Value, 'Id' : wx.NewId(), 'Color' : 'BLUE'}
+        self.NextSeq = self.FakeSeq
+        ## Record Sequencer Inputs Events
         self.SetInput()
         if self.ClockEvts:
             self.SetInput(address=252)
@@ -153,7 +166,7 @@ class SequenceGraph(wx.Panel):
         self.pDC.SetIdBounds(self.SeqTime, TimeBound)
     def OnSize(self, event):
         w,h = self.GetSize()
-        print("OnSize : %i %i" % (w,h))
+        #~ print("OnSize : %i %i" % (w,h))
         self.dTime = w / (self.Bars * 24)
         self.SizeX = w
         self.SizeY = h
@@ -162,6 +175,9 @@ class SequenceGraph(wx.Panel):
     def UnSetInput(self, input_type='Clock', address=248, option = None):
         wx.PostEvent(self, MessageUnRecord(self, self.Id, input_type, address, option))    
     def OnMiddleDown(self, event):
+        self.parent.UnRecordMessage()
+        self.DelSequence(event)
+    def DelSequence(self, event):
         self.UnSetInput()
         if self.ClockEvts:
             self.UnSetInput(address=252)
@@ -180,29 +196,27 @@ class SequenceGraph(wx.Panel):
         print("DrawGraph")
     def Update(self, event):
         if not self.Locked and not self.SubLocked and not self.TimeLock:
-            print("Seq Widget Update")
-            print self.Time
-            self.printSeq()
-            print self.SeqN
+            #~ print("Seq Widget Update")
+            #~ print self.Time
+            #~ self.printSeq()
+            #~ print self.SeqN
+            Value = event.GetValue()
             self.Record = True
             self.TimeLock = True
-            UpdatedSeq = {'Time' : self.Time, 'Value' : event.GetValue(), 'Id' : wx.NewId(), 'Color' : 'BLUE'}
-            #~ if self.Time == self.NextSeq['Time']:
-                #~ self.Seq.pop(self.SeqN)
-            #~ if self.Time == self.Seq[self.SeqN - 1]['Time']:
-                #~ self.Seq.pop(self.SeqN - 1)
+            UpdatedSeq = {'Time' : self.Time, 'Value' : Value, 'Id' : wx.NewId(), 'Color' : 'BLUE'}
             self.Seq.insert(self.SeqN, UpdatedSeq)
+            if self.SeqN == 1:
+                if self.ExtFirstUpdate:
+                    self.Seq[0]['Value'] = Value
             if self.Time == self.Seq[self.SeqN - 1]['Time']:
                 print("pop")
                 self.Seq.pop(self.SeqN - 1)
             else:
                 self.SeqN += 1
+            
+            #~ print("")
             #~ self.printSeq()
-            
-            
-            print("")
-            self.printSeq()
-            print self.SeqN
+            #~ print self.SeqN
     def ClockUpdate(self, event):
         if event.GetAddress() == 248:
             self.Time += 1

@@ -31,7 +31,10 @@ class Connections:
         self.refresh_connections()
 
     def sendMessage(self, message):
-        self.MidiOut.sendMessage(message)
+        try:
+            self.MidiOut.sendMessage(message)
+        except:
+            None
     def CallBack(self, data):
         message = self.MidiFormat(data)
         #print message
@@ -56,7 +59,10 @@ class Connections:
         #connect to input port wishes
         for input_port in range(self.MidiIn.getPortCount()):
             input_port_name = self.MidiIn.getPortName(input_port)
-            #print input_port_name
+            #~ print input_port_name
+            #~ print self.port_in_wishes
+            #~ if input_port_name in self.port_in_wishes:
+                #~ print("Port found")
             if input_port_name in self.port_in_wishes and input_port_name not in self.in_ports_connexions:
                 print("%s found" % input_port_name)
                 self.connect_input_port(input_port_name, input_port)
@@ -71,6 +77,7 @@ class Connections:
         #connect to output port wishes
         for output_port in range(self.MidiOut.getPortCount()):
             output_port_name = self.MidiOut.getPortName(output_port)
+            #~ print output_port_name
             if output_port_name in self.port_out_wishes and output_port_name not in self.out_ports_connexions:
                 print("%s found" % output_port_name)
                 self.connect_output_port(output_port_name, output_port)

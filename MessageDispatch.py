@@ -1,7 +1,7 @@
 import wx
-from threading import Thread
+#from threading import Thread
 from rtmidi import MidiMessage
-
+import  thread
 #Event based Message Dispactch Rules Hanlder
 
 #Basic Message Event handles Type,Address,Option
@@ -31,7 +31,7 @@ def EVT_WIDGET_MESSAGE_RECORD(win, func):
     win.Connect(-1, -1, EVT_WIDGET_MESSAGE_RECORD_ID, func)
 
 class MessageRecord(Message):
-    def __init__(self, Object, Id, Type, Address, Option):
+    def __init__(self, Object, Id, Type, Address, Option=None):
         Message.__init__(self, Object, Id, Type, Address, Option)
         self.SetEventType(EVT_WIDGET_MESSAGE_RECORD_ID)
 
@@ -41,8 +41,8 @@ def EVT_WIDGET_MESSAGE_UNRECORD(win, func):
     win.Connect(-1, -1, EVT_WIDGET_MESSAGE_UNRECORD_ID, func)
 
 class MessageUnRecord(Message):
-    def __init__(self, Object, Id, Type, Address, Option):
-        Message.__init__(self, Object, Id, Type, Address, Option)
+    def __init__(self, Object, Id, Type, Address, Option=None):
+        Message.__init__(self, Object, Id, Type, Address, Option=None)
         self.SetEventType(EVT_WIDGET_MESSAGE_UNRECORD_ID)
 
 #Event from Widget to ask their recorded messages
@@ -123,21 +123,95 @@ class ExternalMidiOutMessage(wx.PyCommandEvent):
     def GetMidiMessage(self):
         return self.midi_message
 
+#Threading Midi Messages Class
+class MessageDispatch(wx.PyEvtHandler):
+    def __init__(self, parent, clock_signature=4):
+        #~ thread.__init__()
+        wx.PyEvtHandler.__init__(self)
+        self.Dispatch = MessageDispatchRules(self)
+    def AddInMessage(self, event):
+        thread.start_new_thread(self.Dispatch.AddInMessage, (event,))
+    def DelInMessage(self, event):
+        thread.start_new_thread(self.Dispatch.DelInMessage, (event,))
+    def GetInMessage(self,event):
+        thread.start_new_thread(self.Dispatch.GetInMessage, (event,))
+    def InternalMessage(self, event):
+        thread.start_new_thread(self.Dispatch.InternalMessage, (event,))
+        #~ thread.start_new_thread(self.Dispatch.InternalMessage, (1,2))
+    def ExternalMidiInMessage(self, event):
+        thread.start_new_thread(self.Dispatch.ExternalMidiInMessage, (event,))
+    #~ def ExternalMidiMessageInDispatch(self, Type, Address, Value):
+    #~ def SendExternalMessage(self, Type, Address, Option, Value):
+    
 #Main Messages Dispatch Class
 class MessageDispatchRules(wx.PyEvtHandler):
     def __init__(self, parent, clock_signature=4):
         wx.PyEvtHandler.__init__(self)
         self.parent = parent
+        self.Id = wx.NewId()
         self.OutMessages = []
         self.OutObjectMessages = dict()
         self.OutTypeMessages = dict()
-    def SearchIndex(self, index, Table):
+        self.Sequences = []
+    def GetId(self):
+        return self.Id
+    def AddSequencer(self, event):
+        self.Sequences.append(event)
+    def AddSequence(self, event):
+        #~ print("Add Sequence Dispatch")
+        Object = event.GetEventObject()
+        ObjectId = event.GetId()
+        #~ print("Dispatch")
+        #~ print self.Id
+        #~ print("Emitter")
+        #~ print ObjectId
+        #~ print self.OutObjectMessages
+        for Seq in self.Sequences:
+            wx.PostEvent(Seq.GetEventObject(), MessageSequencerRecord(Object, event.GetValue()))
+        if ObjectId in self.OutObjectMessages:
+            for obj in self.OutObjectMessages[ObjectId]:
+                EmitterObject = self.OutMessages[obj]
+                for type_object in self.OutTypeMessages[self.OutMessages[obj].GetType()]:
+                    InternalObject = self.OutMessages[type_object]
+                    if not InternalObject.GetId() == ObjectId:
+                        if InternalObject.GetAddress() == EmitterObject.GetAddress():
+                            #~ print("Send RecordSequence to")
+                            #~ print InternalObject.GetId()
+                            #~ print InternalObject.GetType()
+                            #~ print InternalObject.GetAddress()
+                            wx.PostEvent(InternalObject.GetEventObject(), MessageSequencerRecord(EmitterObject.GetEventObject(), event.GetValue()))
+    def DelSequence(self, event):
+        Object = event.GetEventObject()
+        ObjectId = event.GetId()
+        #~ print("Dispatch")
+        #~ print self.Id
+        #~ print("Emitter")
+        #~ print ObjectId
+        #~ print self.OutObjectMessages
+        if ObjectId in self.OutObjectMessages:
+            for obj in self.OutObjectMessages[ObjectId]:
+                EmitterObject = self.OutMessages[obj]
+                for type_object in self.OutTypeMessages[self.OutMessages[obj].GetType()]:
+                    InternalObject = self.OutMessages[type_object]
+                    if not InternalObject.GetId() == ObjectId:
+                        if InternalObject.GetAddress() == EmitterObject.GetAddress():
+                            #~ print("Send UnRecordSequence to")
+                            #~ print InternalObject.GetId()
+                            #~ print InternalObject.GetType()
+                            #~ print InternalObject.GetAddress()
+                            wx.PostEvent(InternalObject.GetEventObject(), MessageSequencerUnRecord(EmitterObject.GetEventObject()))
+    def SearchIndex(self, val, Table):
         #~ TODO - Switch this function with list.index(x) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~&
-        Result = None
-        for i in range(len(Table)):
-            if Table[i] == index:
-                Result = i
-                break
+        #~ Result = None
+        try:
+            Result = Table.index(val)
+        except:
+            Result = None
+        #~ Result = None
+        #~ for i in range(len(Table)):
+            #~ if Table[i] == val:
+                #~ Result = i
+                #~ break
         return Result
     def AddInMessage(self, event):
         Object = event.GetEventObject()
@@ -146,6 +220,10 @@ class MessageDispatchRules(wx.PyEvtHandler):
         Address = event.GetAddress()
         Option  = event.GetOption()
         MessageAlreadyRecorded = False
+        #~ print("AddInMessage debug")
+        #~ print Id
+        #~ print Type
+        #~ print Address
         if Id in self.OutObjectMessages:
             for e in self.OutObjectMessages[Id]:
                 evt = self.OutMessages[e]
@@ -164,7 +242,7 @@ class MessageDispatchRules(wx.PyEvtHandler):
                 self.OutTypeMessages[Type].append(MessagePos)
             else:
                 self.OutTypeMessages[Type] = [MessagePos]
-            print self.OutObjectMessages
+            #~ print self.OutObjectMessages
     def DelInMessage(self, event):
         #~ print("DelInMessage")
         #~ print self.OutObjectMessages
@@ -241,6 +319,7 @@ class MessageDispatchRules(wx.PyEvtHandler):
         else:
                 wx.PostEvent(event.GetSource(), Message(event.GetEventObject(), event.GetId(), None, None, None))
     def InternalMessage(self, event):
+        #~ print("Internal Message")
         Object = event.GetEventObject()
         Id = event.GetId()
         Value = event.GetValue()
@@ -254,6 +333,9 @@ class MessageDispatchRules(wx.PyEvtHandler):
                 for subelmt in self.OutTypeMessages[ElmtType]:
                     subElmt = self.OutMessages[subelmt]
                     if subElmt.GetAddress() == ElmtAdd and not subElmt.GetId() == Id:
+                        #~ print("SubElmt")
+                        #~ print subElmt.GetId()
+                        
                         subElmtObject = subElmt.GetEventObject()
                         wx.PostEvent(subElmtObject, WidgetUpdate(subElmtObject , subElmt.GetId(), subElmt.GetType(), subElmt.GetAddress() ,Value))
     def ExternalMidiInMessage(self, event):
@@ -298,6 +380,10 @@ class MessageDispatchRules(wx.PyEvtHandler):
             else:
                 midi_message = MidiMessage().noteOff(Address[0] , Address[1])
                 wx.PostEvent(self.parent , ExternalMidiOutMessage(midi_message))
+        elif Type == 'Clock':
+            if Address == 248:
+                midi_message = MidiMessage().midiClock()
+                wx.PostEvent(self.parent , ExternalMidiOutMessage(midi_message))
 #        elif Type == 
 #        print("SendExternalMessage")
 #        print Type
@@ -318,3 +404,25 @@ class MessageSequencerRecord(wx.PyCommandEvent):
         self.Value = value
     def GetValue(self):
         return self.Value
+
+EVT_WIDGET_SEQUENCER_MESSAGE_UNRECORD_ID = wx.NewId()
+def EVT_WIDGET_SEQUENCER_MESSAGE_UNRECORD(win, func):
+    win.Connect(-1, -1, EVT_WIDGET_SEQUENCER_MESSAGE_UNRECORD_ID, func)
+
+class MessageSequencerUnRecord(wx.PyCommandEvent):
+    def __init__(self, Object):
+        wx.PyCommandEvent.__init__(self)
+        self.SetEventType(EVT_WIDGET_SEQUENCER_MESSAGE_UNRECORD_ID)
+        self.SetEventObject(Object)
+        self.SetId(Object.GetId())
+
+EVT_WIDGET_SEQUENCER_RECORD_ID = wx.NewId()
+def EVT_WIDGET_SEQUENCER_RECORD(win, func):
+    win.Connect(-1, -1, EVT_WIDGET_SEQUENCER_RECORD_ID, func)
+
+class SequencerRecord(wx.PyCommandEvent):
+    def __init__(self, Object):
+        wx.PyCommandEvent.__init__(self)
+        self.SetEventType(EVT_WIDGET_SEQUENCER_RECORD_ID)
+        self.SetEventObject(Object)
+        self.SetId(Object.GetId())
