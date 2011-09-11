@@ -50,11 +50,33 @@ class ControlContextMenu(wx.Menu):
         self.Bind(wx.EVT_MENU, self.OnSetControl, id=SetControl.GetId())
 
     def OnSetControl(self, event):
-        self.parent.SetControl()
-        ControlMessage = wx.Dialog(self)
+        #~ self.parent.SetControl()
+        ControlMessage = wxControlSettings(self.parent)
+        ControlMessage.ShowModal()
+        ControlMessage.Destroy()
     def GetParent(self):
         return self.parent
-         
+
+class wxControlSettings(wx.Dialog):
+    def __init__(self, control):
+        wx.Dialog.__init__(self, None, -1, 'Control Settings')
+        self.control = control
+        self.controlId = control.GetId()
+        #~ control.panel = wx.Panel(self, -1)
+        self.vbox = wx.BoxSizer(wx.VERTICAL)
+        self.SetSizer(self.vbox)
+        EVT_WIDGET_MESSAGE(self, self.GetMessage)
+        self.GetInputs()
+    def GetMessage(self, event):
+        print("GetInputMessage")
+        self.InitLine(event)
+    def GetInputs(self):
+        wx.PostEvent(self, MessageGet(self.control, Source=self))
+    def InitLine(self, Input):
+        hbox = BoxSizer(wx.HORIZONTAL)
+        TypeCombo = wx.ComboBox(self, -1, choices=["Midi CC", "Midi Note", "OSC"])
+        hbox.Add(TypeCombo)
+        self.vbox.Add(hbox)
 class wxFader(wx.Panel):
     def __init__(self, *args,  **kwargs):
         wx.Panel.__init__(self, *args, **kwargs)
