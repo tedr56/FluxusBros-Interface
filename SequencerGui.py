@@ -98,12 +98,11 @@ class SequencePanel(wx.Panel):
         self.NumSequence = num
     def TempoPlus(self, event):
         SeqRec = self.Sequence.GetBarsSeq()
-        self.Sequence.SetBarsReq(SeqRec * 2)
+        self.Sequence.SetBarsReq(SeqRec * 2.0)
         self.TempoBars.SetLabel(str(self.Sequence.GetBarsSeq()))
     def TempoMinus(self, event):
         SeqRec = self.Sequence.GetBarsSeq()
-        if SeqRec > 1:
-            self.Sequence.SetBarsReq(SeqRec / 2)
+        self.Sequence.SetBarsReq(SeqRec / 2.0)
         self.TempoBars.SetLabel(str(self.Sequence.GetBarsSeq()))
     def TempoFit(self, event):
         self.Sequence.SetBarsReqFit()
@@ -167,7 +166,7 @@ class SequenceGraph(wx.Panel):
         self.TimeLock = False       #Store Lock if Seq already recorded on Tick Time
         self.TimeSum = 0            #Store the Time past in dTime
         self.TimeSumDx = 0          #Store the Time past to restore on reset clock
-        self.Bars = 1               #Store Showed Bars Number
+        self.Bars = 1.0             #Store Showed Bars Number
         self.BarsSeq = self.Bars    #Store Sequenced Bars Number
         self.BeatPerBar = 4
         ## Sequencer Config Variables
@@ -191,6 +190,7 @@ class SequenceGraph(wx.Panel):
         self.SetInput()
         if self.ClockEvts:
             self.SetInput(address=252)
+            self.SetInput(address=251)
             self.SetInput(address=250)
         wx.CallAfter(self.InitDraw)
     def InitDraw(self):
@@ -260,22 +260,20 @@ class SequenceGraph(wx.Panel):
                 self.Seq.pop(self.SeqN - 1)
             else:
                 self.SeqN += 1
+        #~ else:
+            #~ print("Debug Sequencer Control Update")
+            #~ print self.Locked
+            #~ print self.SubLocked
+            #~ print self.TimeLock
     def ClockUpdate(self, event):
         if event.GetAddress() == 248:
             self.Time += 1
             self.TimeLock = False
             if not self.SubLocked:
-                if self.Time > (self.BarsSeq * 24):
+                if self.Time > (self.BarsSeq * self.BeatPerBar * 24):
                     self.SubLocked = True
             if self.Time > (self.Bars * self.BeatPerBar * 24):
-                self.NextSeq = self.Seq[0]
-                self.Record = False
-                self.SubLocked = False
-                self.Time = 0
-                self.SeqN = 0
-                self.ClockDraw(math.floor(self.TimeSumDx) * -1)
-                self.TimeSum = 0
-                self.TimeSumDx = 0
+                self.ClockReset()
             else:
                 if (self.Time * self.dTime) >= math.floor(self.TimeSum) + 1:
                     Dx = (self.Time * self.dTime) - self.TimeSum
@@ -283,16 +281,15 @@ class SequenceGraph(wx.Panel):
                     self.TimeSum = (self.Time * self.dTime)
                     self.ClockDraw(math.floor(self.TimeSum) - self.TimeSumDx)
                     self.TimeSumDx = math.floor(self.TimeSum)
-                #~ self.ClockDraw(self.dTime)
-                    #~ print("Debug TimeClock")
-                    #~ print self.dTime
-                    #~ print self.TimeSum
-                    #~ print self.Time
+
             if self.Time == self.NextSeq['Time']:
                 if self.Record:
                     self.Seq.pop(self.SeqN)
-                    self.NextSeq = self.Seq[self.SeqN]
-                    print("pop record")
+                    if self.SeqN >= len(self.Seq):
+                        self.NextSeq = self.FakeSeq
+                    else:
+                        self.NextSeq = self.Seq[self.SeqN]
+                    #~ print("pop record")
                     #~ self.Seq[self.SeqN]
                 else:
                     wx.PostEvent(self, InternalMessage(self.parent, self.NextSeq['Value']))
@@ -305,23 +302,26 @@ class SequenceGraph(wx.Panel):
                 #~ print self.NextSeq
             
         elif event.GetAddress() == 252:
-            print("Clock Stop")
             self.UnSetInput()
         elif event.GetAddress() == 250:
-            print("Clock Start")
-            self.ClockDraw(self.Time * self.dTime * -1)
-            self.Time = 0
+            self.ClockReset()
+            self.SetInput()
+        elif event.GetAddress() == 251:
             self.SetInput()
     def printSeq(self):
         print("")
         for i in self.Seq:
             print i
-    def ClockReset():
-        self.ClockDraw(self.Time * self.dTime * -1)
-        self.Time = 0
-        self.SubLocked = False
+    def ClockReset(self):
+        self.NextSeq = self.Seq[0]
         self.Record = False
+        self.SubLocked = False
+        self.TimeLock = False
+        self.Time = 0
         self.SeqN = 0
+        self.ClockDraw(math.floor(self.TimeSumDx) * -1)
+        self.TimeSum = 0
+        self.TimeSumDx = 0
     def ClockDraw(self, dTime):
         #~ w,h = self.GetSize()
         self.pDC.TranslateId(self.SeqTime, dTime, 0)
@@ -345,36 +345,42 @@ class SequenceGraph(wx.Panel):
         self.SeqN = 1
         self.Seq.append(self.first_seq)
     def GetBarsSeq(self):
-        return self.BarsSeq
+        if self.BarsSeq == math.floor(self.BarsSeq):
+            return int(self.BarsSeq)
+        else:
+            return self.BarsSeq
     def SetBarsReq(self, bars):
         #~ print bars
         #~ print self.Bars
         #~ print self.BarsSeq
-        if bars > self.Bars:
-            #~ print("SupBar")
-            self.ClockDraw(self.TimeSumDx * -1)
-            self.BarsSeq = bars
-            self.Bars = bars
-            self.OnSize(None)
-            Dx = (self.Time * self.dTime)
-            Dxi = math.floor(Dx)
-            self.TimeSum = Dx
-            self.TimeSumDx = Dxi
-            self.ClockDraw(self.TimeSumDx)
-        else:
-            self.ClockDraw(self.TimeSumDx * -1)
-            self.BarsSeq = bars
-            self.OnSize(None)
-            self.ClockDraw(self.TimeSumDx)
+        if bars >= 0.25:
+            if bars > self.Bars:
+                #~ print("SupBar")
+                self.ClockDraw(self.TimeSumDx * -1)
+                self.BarsSeq = bars
+                self.Bars = bars
+                self.FakeSeq['Time'] = (self.Bars * self.BeatPerBar * 25)
+                self.OnSize(None)
+                Dx = (self.Time * self.dTime)
+                Dxi = math.floor(Dx)
+                self.TimeSum = Dx
+                self.TimeSumDx = Dxi
+                self.ClockDraw(self.TimeSumDx)
+            else:
+                self.ClockDraw(self.TimeSumDx * -1)
+                self.BarsSeq = bars
+                self.OnSize(None)
+                self.ClockDraw(self.TimeSumDx)
     def SetBarsReqFit(self):
         self.ClockDraw(self.TimeSumDx * -1)
         
         self.Bars = self.BarsSeq
+        self.FakeSeq['Time'] = (self.Bars * self.BeatPerBar * 25)
         self.OnSize(None)
         if self.Time >= (self.Bars * self.BeatPerBar * 24):
-            print("SupTicks")
-            print self.Time
-            print self.Time % (self.Bars * self.BeatPerBar * 24)
+            #~ print("SupTicks")
+            #~ print self.Time
+            #~ print self.Time % (self.Bars * self.BeatPerBar * 24)
             self.Time = self.Time % (self.Bars * self.BeatPerBar * 24)
             Dx = (self.Time * self.dTime)
             Dxi = math.floor(Dx)
