@@ -28,7 +28,10 @@ INMIDIPORT = [MicroKontrol_Out_Port , VirtualKeyboard_Port , NanoKontrolPort]
 OUTMIDIPORT = [FluxusInPort , Kmidimon_Port, LMMSPort]
 
 DEFAULT_PLAYERS = ["Korg" , "VMXVJ" , "BitStream"]
+DEFAULT_PROFILE = ["Layer 1"]
 
+FLUXUSBROS_DIRECTORY = "~/git/FluxusBros/"
+FLUXUSBROS_INTERFACE_DIRECTORY = "~/git/FluxusBros-Interface/"
 class MyFrame(wx.Frame):
     def __init__(self, parent, ID, title):
         self.cfg = ConfigObj("./config.cfg")
@@ -62,10 +65,10 @@ class MyFrame(wx.Frame):
             self.cfg['App']['height'] = h
             self.cfg.write()
         wx.Frame.__init__(self, parent, ID, title, wx.DefaultPosition, wx.Size(w, h))
-        if 'MidiPort' in self.cfg:
+        try:
             inmidiport = self.cfg['MidiPort'].as_list('InPort')
             outmidiport = self.cfg['MidiPort'].as_list('OutPort')
-        else:
+        except:
             inmidiport = INMIDIPORT
             outmidiport = OUTMIDIPORT
             self.cfg['MidiPort']={}
@@ -73,18 +76,42 @@ class MyFrame(wx.Frame):
             self.cfg['MidiPort']['OutPort'] = outmidiport
             self.cfg.write()
         self.InitMidi(inmidiport, outmidiport)
-        if 'Players' in self.cfg:
+        try:
             self.Players = self.cfg.as_list('Players')
-        else:
+        except:
             self.Players = DEFAULT_PLAYERS
             self.cfg['Players'] = self.Players
             self.cfg.write()
-        if 'DefaultPlayer' in self.cfg:
+        try:
             self.DefaultPlayer = self.cfg['DefaultPlayer']
-        else:
+        except:
             self.DefaultPlayer = self.cfg.as_list('Players')[1]
             self.cfg['DefaultPlayer'] = self.DefaultPlayer
             self.cfg.write()
+        try:
+            self.Player = self.cfg[self.DefaultPlayer]
+        except:
+            self.cfg[self.DefaultPlayer] = {}
+            self.cfg.write()
+            self.Player = self.cfg[self.DefaultPlayer]
+        try:
+            self.Layers = self.cfg[self.DefaultPlayer]['Layers'].keys()
+            self.DefaultLayer = self.cfg[self.DefaultPlayer]['DefaultLayer']
+            self.Layer = self.cfg[self.DefaultPlayer]['Layers'][self.DefaultLayer]
+        except:
+            self.cfg[self.DefaultPlayer]['Layers'] = {}
+            self.cfg[self.DefaultPlayer]['Layers']['Layer 1'] = {}
+            self.cfg[self.DefaultPlayer]['DefaultLayer'] = self.cfg[self.DefaultPlayer]['Layers'].keys()[0]
+            self.cfg.write()
+            self.Layers = self.cfg[self.DefaultPlayer]['Layers'].keys()
+            self.DefaultLayer = self.cfg[self.DefaultPlayer]['DefaultLayer']
+            self.Layer = self.cfg[self.DefaultPlayer]['Layers'][self.DefaultLayer]
+        try:
+            Medias = self.Layer['Media']
+        except:
+            self.Layer['Media'] = {}
+            self.cfg.write()
+            Medias = self.Layer['Media']
         self.InitPanels()
     def InitMidi(self, inmidi=[], outmidi=[]):
         self.MidiConnect = Connections(self.MidiInputRefresh, inmidi, outmidi)
@@ -116,6 +143,13 @@ class MyFrame(wx.Frame):
         combo.SetStringSelection(self.DefaultPlayer)
         toolbar.AddControl(combo)
         wx.EVT_COMBOBOX(self, TOOL_ID_COMBO, self.SetPlayer)
+        
+        TOOL_ID_COMBO_LAYERS = wx.NewId()
+        combo_layers = wx.ComboBox(toolbar, TOOL_ID_COMBO_LAYERS, choices = self.Layers)
+        combo_layers.SetStringSelection(self.DefaultLayer)
+        toolbar.AddControl(combo_layers)
+        wx.EVT_COMBOBOX(self, TOOL_ID_COMBO_LAYERS, self.SetLayer)
+        
         Clock = ClockControl(toolbar, wx.NewId())
         toolbar.AddControl(Clock)
         bmp = wx.ArtProvider.GetBitmap(wx.ART_EXECUTABLE_FILE, wx.ART_OTHER, (16, 16))
@@ -126,7 +160,8 @@ class MyFrame(wx.Frame):
         return toolbar
     def SetPlayer(self, event):
         print("New Player : %s" % event.GetEventObject().GetValue())
-         
+    def SetLayer(self, event):
+        print event
 class MyApp(wx.App):
     def OnInit(self, *args, **kwargs):
         self.MainFrame = MyFrame(None, -1, "FluxusBros Interface")

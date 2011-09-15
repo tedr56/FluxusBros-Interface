@@ -609,3 +609,27 @@ class InternalClock(wx.PyEvtHandler, Thread):
         self.KeepGoing = False
     def GetId(self):
         return self.Id
+class SchemeFileDrop(wx.FileDropTarget):
+    def __init__(self, window):
+        wx.FileDropTarget.__init__(self)
+        self.window = window
+    def OnDropFiles(self, x, y, filenames):
+        File = filenames[0]
+        FileSplit = File.split('.')
+        FileExtension = FileSplit[len(FileSplit) - 1)]
+        if FileExtension == "scm" or FileExtension = "SCM"
+            self.window.SetVisual(File)
+        
+class wxMediaVisual(wx.Panel):
+    def __init__(self, parent, Id, visual=None):
+        wx.Panel.__init__(self, parent, Id)
+        self.Visual = visual
+        if visual:
+            self.InitVisual()
+        else:
+            bmp = wx.ArtProvider.GetBitmap(wx.ART_INFORMATION, wx.ART_OTHER, (16, 16))
+            wx.StaticBitmap(self, wx.ID_ANY, bmp)
+        SDT = SchemeFileDrop(self)
+        self.SetDropTarget(SDT)
+    def InitVisual(self):
+        self.wx.StaticText(self.Visual)
