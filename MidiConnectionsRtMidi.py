@@ -1,7 +1,7 @@
 from os import popen, getpid
 import rtmidi
 import re
-import numpy as np
+#import numpy as np
 #import threading
 #import wx
 
