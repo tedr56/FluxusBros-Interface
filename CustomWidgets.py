@@ -616,8 +616,8 @@ class SchemeFileDrop(wx.FileDropTarget):
     def OnDropFiles(self, x, y, filenames):
         File = filenames[0]
         FileSplit = File.split('.')
-        FileExtension = FileSplit[len(FileSplit) - 1)]
-        if FileExtension == "scm" or FileExtension = "SCM"
+        FileExtension = FileSplit[(len(FileSplit) - 1)]
+        if FileExtension == "scm" or FileExtension == "SCM":
             self.window.SetVisual(File)
         
 class wxMediaVisual(wx.Panel):
