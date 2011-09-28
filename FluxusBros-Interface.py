@@ -30,8 +30,11 @@ OUTMIDIPORT = [FluxusInPort , Kmidimon_Port, LMMSPort]
 DEFAULT_PLAYERS = ["Korg" , "VMXVJ" , "BitStream"]
 DEFAULT_PROFILE = ["Layer 1"]
 
-FLUXUSBROS_DIRECTORY = "~/git/FluxusBros/"
-FLUXUSBROS_INTERFACE_DIRECTORY = "~/git/FluxusBros-Interface/"
+global FLUXUS_BROSDIRECTORY
+FLUXUS_BROSDIRECTORY = "~/Sources/git/FluxusBros"
+global FLUXUSBROS_INTERFACE_DIRECTORY
+FLUXUSBROS_INTERFACE_DIRECTORY = "~/Sources/git/FluxusBros-Interface"
+
 class MyFrame(wx.Frame):
     def __init__(self, parent, ID, title):
         self.cfg = ConfigObj("./config.cfg")
@@ -54,16 +57,22 @@ class MyFrame(wx.Frame):
         
         
     def InitConfig(self, parent, ID, title):
-        if 'App' in self.cfg:
+        try:
             print("Config File")
             w , h = self.cfg['App'].as_int('width'), self.cfg['App'].as_int('height')
-        else:
+            FLUXUS_BROSDIRECTORY = self.cfg['App']['FluxusBros_Directory']
+            FLUXUSBROS_INTERFACE_DIRECTORY = self.cfg['App']['FluxusBros_Interface_Directory']
+        except:
             print("Defaults")
             w, h = (APP_SIZE_X, APP_SIZE_Y)
             self.cfg['App'] = {}
             self.cfg['App']['width'] = w
             self.cfg['App']['height'] = h
+            self.cfg['App']['FluxusBros_Directory'] = FLUXUS_BROSDIRECTORY
+            self.cfg['App']['FluxusBros_Interface_Directory'] = FLUXUSBROS_INTERFACE_DIRECTORY
             self.cfg.write()
+            FLUXUSBROS_DIRECTORY = self.cfg['App']['FluxusBros_Directory']
+            FLUXUSBROS_INTERFACE_DIRECTORY = self.cfg['App']['FluxusBros_Interface_Directory']
         wx.Frame.__init__(self, parent, ID, title, wx.DefaultPosition, wx.Size(w, h))
         try:
             inmidiport = self.cfg['MidiPort'].as_list('InPort')
@@ -127,7 +136,8 @@ class MyFrame(wx.Frame):
         self.Media = MediaPanel(self)
         self.Table = TablePanel(self)
         self.Sequencer = SequencerPanel(self)
-        hbox.Add(self.Media, proportion = 0, flag=wx.EXPAND)
+        #~ hbox.Add(self.Media, proportion = 1, flag=wx.EXPAND)
+        hbox.Add(self.Media, proportion = 0)
         hbox.Add(self.Table, proportion = 2, flag=wx.EXPAND)
         hbox.Add(self.Sequencer, proportion = 1, flag=wx.EXPAND)
         vbox.Add(hbox, proportion=-1, flag=wx.EXPAND)

@@ -6,6 +6,9 @@ import time
 #~ import  thread
 from threading import Thread
 import MidiVars
+import os
+from configobj import ConfigObj
+import Image
 
 #~ class Control(wx.PyEvtHandler):
     #~ def __init__(self, parent):
@@ -623,13 +626,46 @@ class SchemeFileDrop(wx.FileDropTarget):
 class wxMediaVisual(wx.Panel):
     def __init__(self, parent, Id, visual=None):
         wx.Panel.__init__(self, parent, Id)
+        self.parent = parent
         self.Visual = visual
+        self.Sizer = wx.BoxSizer(wx.VERTICAL)
         if visual:
             self.InitVisual()
         else:
-            bmp = wx.ArtProvider.GetBitmap(wx.ART_INFORMATION, wx.ART_OTHER, (16, 16))
-            wx.StaticBitmap(self, wx.ID_ANY, bmp)
+            self.BMP = wx.ArtProvider.GetBitmap(wx.ART_INFORMATION, wx.ART_OTHER, (16, 16))
+            self.BTN = wx.BitmapButton(self, wx.ID_ANY, self.BMP)
+            self.Sizer.Add(self.BTN, 1, wx.EXPAND)
+        self.SetSizer(self.Sizer)
         SDT = SchemeFileDrop(self)
         self.SetDropTarget(SDT)
     def InitVisual(self):
         self.wx.StaticText(self.Visual)
+    def SetVisual(self, Visu):
+        FilePath = os.path.split(Visu)
+        Path = FilePath[0]
+        File = FilePath[1]
+        VisuName = os.path.splitext(File)[0]
+        try:
+            cfg = ConfigObj("./config.cfg")
+            FLUXUSBROS_INTERFACE_DIRECTORY = cfg['App']['FluxusBros_Interface_Directory']
+            ImageVisuName = VisuName + ".jpg"
+            ImageFilePath = os.path.join(FLUXUSBROS_INTERFACE_DIRECTORY, "Preview", ImageVisuName)
+            ImageVisu = wx.Image(ImageFilePath,wx.BITMAP_TYPE_JPEG)
+            ImageVisu.Rescale(72,57)
+            self.BTN.SetBitmapLabel(wx.BitmapFromImage(ImageVisu))
+            self.BTN.SetToolTipString(VisuName)
+            self.parent.UpdateSizer()
+        except:
+            None
+        #~ try:
+            #~ cfg = ConfigObj("./config.cfg")
+            #~ FLUXUSBROS_INTERFACE_DIRECTORY = cfg['App']['FluxusBros_Interface_Directory']
+            #~ try:
+                #~ ImageVisuName = VisuName + ".png"
+                #~ ImagePath = os.path.join(FLUXUSBROS_INTERFACE_DIRECTORY, "Preview", ImageVisuName)
+                #~ wx.Image(ImageFile,wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+            #~ except:
+                #~ print("No Preview")
+                #~ wx.StaticText(VisuName)
+        #~ except:
+            #~ print("Config Not Set")
