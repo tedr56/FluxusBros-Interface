@@ -3,5 +3,6 @@ FluxusBros-Interface
 A wxPython GUI for the Visuals Mixing Fluxus Script
 
 Requirements:
+Python 2.6
 PyRtMidi   --CrossPlatform Midi Library-- (use the own patched version at http://github.com/tedr56/PyRtMidi)
 ConfigObj  --Config File Library--        (http://www.voidspace.org.uk/python/configobj.html)
