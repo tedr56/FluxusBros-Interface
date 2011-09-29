@@ -3,12 +3,10 @@ from wx.lib.agw.knobctrl import *
 from MessageDispatch import *
 import rtmidi
 import time
-#~ import  thread
 from threading import Thread
 import MidiVars
 import os
 from configobj import ConfigObj
-import Image
 
 #~ class Control(wx.PyEvtHandler):
     #~ def __init__(self, parent):
@@ -657,15 +655,4 @@ class wxMediaVisual(wx.Panel):
             self.parent.UpdateSizer()
         except:
             None
-        #~ try:
-            #~ cfg = ConfigObj("./config.cfg")
-            #~ FLUXUSBROS_INTERFACE_DIRECTORY = cfg['App']['FluxusBros_Interface_Directory']
-            #~ try:
-                #~ ImageVisuName = VisuName + ".png"
-                #~ ImagePath = os.path.join(FLUXUSBROS_INTERFACE_DIRECTORY, "Preview", ImageVisuName)
-                #~ wx.Image(ImageFile,wx.BITMAP_TYPE_PNG).ConvertToBitmap()
-            #~ except:
-                #~ print("No Preview")
-                #~ wx.StaticText(VisuName)
-        #~ except:
-            #~ print("Config Not Set")
+

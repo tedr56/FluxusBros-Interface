@@ -8,6 +8,7 @@ from MidiConnectionsRtMidi import Connections
 from MessageDispatch import *
 from ClockGui import ClockControl
 from MediaGui import MediaPanel
+from ControlsGui import ControlsPanel
 from TableGui import TablePanel
 from SequencerGui import SequencerPanel
 from configobj import ConfigObj
@@ -134,11 +135,15 @@ class MyFrame(wx.Frame):
         vbox.Add(toolbar, 0, wx.EXPAND)
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         self.Media = MediaPanel(self)
+        self.Controls = ControlsPanel(self)
         self.Table = TablePanel(self)
         self.Sequencer = SequencerPanel(self)
         #~ hbox.Add(self.Media, proportion = 1, flag=wx.EXPAND)
         hbox.Add(self.Media, proportion = 0)
-        hbox.Add(self.Table, proportion = 2, flag=wx.EXPAND)
+        TableBox = wx.BoxSizer(wx.VERTICAL)
+        TableBox.Add(self.Controls, proportion = 1, flag=wx.EXPAND)
+        TableBox.Add(self.Table, proportion = 2, flag=wx.EXPAND)
+        hbox.Add(TableBox, 2, wx.EXPAND)
         hbox.Add(self.Sequencer, proportion = 1, flag=wx.EXPAND)
         vbox.Add(hbox, proportion=-1, flag=wx.EXPAND)
         self.SetSizer(vbox)

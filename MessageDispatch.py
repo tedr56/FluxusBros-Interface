@@ -123,6 +123,23 @@ class ExternalMidiOutMessage(wx.PyCommandEvent):
     def GetMidiMessage(self):
         return self.midi_message
 
+#Media Panel Visu Loading
+EVT_WIDGET_MEDIA_MESSAGE_ID = wx.NewId()
+def EVT_WIDGET_MEDIA_MESSAGE(win, func):
+    win.Connect(-1, -1, EVT_WIDGET_MEDIA_MESSAGE_ID, func)
+
+class MediaMessage(wx.PyCommandEvent):
+    def __init__(self, Object, Id, Controls):
+        wx.PyCommandEvent.__init__(self)
+        self.SetEventType(EVT_WIDGET_MEDIA_MESSAGE_ID)
+        self.SetEventObject(Object)
+        self.SetId(Id)
+        self.Controls = Controls
+    def GetControls(self):
+        return self.Controls
+
+#~ TODO : CLEAR Media Message Event
+
 #Threading Midi Messages Class
 class MessageDispatch(wx.PyEvtHandler):
     def __init__(self, parent, clock_signature=4):
