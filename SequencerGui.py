@@ -248,7 +248,9 @@ class SequenceGraph(wx.Panel):
             #~ self.printSeq()
             #~ print self.SeqN
             Value = event.GetValue()
-            self.Record = True
+            Type = event.GetType()
+            if not Type == "note" and not Value == 0:
+                self.Record = True
             self.TimeLock = True
             UpdatedSeq = {'Time' : self.Time, 'Value' : Value, 'Id' : wx.NewId(), 'Color' : 'BLUE'}
             self.Seq.insert(self.SeqN, UpdatedSeq)
