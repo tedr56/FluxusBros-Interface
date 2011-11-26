@@ -31,8 +31,8 @@ OUTMIDIPORT = [FluxusInPort , Kmidimon_Port, LMMSPort]
 DEFAULT_PLAYERS = ["Korg" , "VMXVJ" , "BitStream"]
 DEFAULT_PROFILE = ["Layer 1"]
 
-global FLUXUS_BROSDIRECTORY
-FLUXUS_BROSDIRECTORY = "~/Sources/git/FluxusBros"
+global FLUXUSBROS_DIRECTORY
+FLUXUSBROS_DIRECTORY = "~/Sources/git/FluxusBros"
 global FLUXUSBROS_INTERFACE_DIRECTORY
 FLUXUSBROS_INTERFACE_DIRECTORY = "~/Sources/git/FluxusBros-Interface"
 
@@ -58,10 +58,12 @@ class MyFrame(wx.Frame):
         
         
     def InitConfig(self, parent, ID, title):
+        global FLUXUSBROS_DIRECTORY
+        global FLUXUSBROS_INTERFACE_DIRECTORY
         try:
             print("Config File")
             w , h = self.cfg['App'].as_int('width'), self.cfg['App'].as_int('height')
-            FLUXUS_BROSDIRECTORY = self.cfg['App']['FluxusBros_Directory']
+            FLUXUSBROS_DIRECTORY = self.cfg['App']['FluxusBros_Directory']
             FLUXUSBROS_INTERFACE_DIRECTORY = self.cfg['App']['FluxusBros_Interface_Directory']
         except:
             print("Defaults")
@@ -69,7 +71,7 @@ class MyFrame(wx.Frame):
             self.cfg['App'] = {}
             self.cfg['App']['width'] = w
             self.cfg['App']['height'] = h
-            self.cfg['App']['FluxusBros_Directory'] = FLUXUS_BROSDIRECTORY
+            self.cfg['App']['FluxusBros_Directory'] = FLUXUSBROS_DIRECTORY
             self.cfg['App']['FluxusBros_Interface_Directory'] = FLUXUSBROS_INTERFACE_DIRECTORY
             self.cfg.write()
             FLUXUSBROS_DIRECTORY = self.cfg['App']['FluxusBros_Directory']
@@ -135,13 +137,13 @@ class MyFrame(wx.Frame):
         vbox.Add(toolbar, 0, wx.EXPAND)
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         self.Media = MediaPanel(self)
-        self.Controls = ControlsPanel(self)
+        #~ self.Controls = ControlsPanel(self)
         self.Table = TablePanel(self)
         self.Sequencer = SequencerPanel(self)
         #~ hbox.Add(self.Media, proportion = 1, flag=wx.EXPAND)
         hbox.Add(self.Media, proportion = 0)
         TableBox = wx.BoxSizer(wx.VERTICAL)
-        TableBox.Add(self.Controls, proportion = 1, flag=wx.EXPAND)
+        #~ TableBox.Add(self.Controls, proportion = 1, flag=wx.EXPAND)
         TableBox.Add(self.Table, proportion = 2, flag=wx.EXPAND)
         hbox.Add(TableBox, 2, wx.EXPAND)
         hbox.Add(self.Sequencer, proportion = 1, flag=wx.EXPAND)
