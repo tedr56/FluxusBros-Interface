@@ -175,11 +175,12 @@ class wxFaderWidget(wx.Slider):
         wx.PostEvent(self, MessageGet(self))
     def WidgetUpdate(self, event):
         self.SetValue(event.GetValue())
+        
 class wxCrossFader(wxFader):
     def __init__(self, *args, **kwargs):
         wxFader.__init__(self, *args, style = wx.SL_AUTOTICKS |  wx.SL_HORIZONTAL | wx.SL_LABELS | wx.SL_INVERSE, **kwargs)
-
-class wxKnob(KnobCtrl):
+        
+class wxKnobC(KnobCtrl):
     def __init__(self, parent, Id=wx.NewId(), size=(20, 20)):
         KnobCtrl.__init__(self, parent, Id, size)
         self.parent = parent
@@ -219,6 +220,11 @@ class wxKnob(KnobCtrl):
         self.SetValue(event.GetValue())
     def DrawTags(self, dc, size):
         None
+
+class wxKnob(wxCrossFader):
+    def __init__(self, parent, Id=wx.NewId(), size=(20, 20)):
+        wxCrossFader.__init__(self, parent, Id)
+
 class wxPiano(wx.Panel):
     def __init__(self, *args, **kwargs):
         wx.Panel.__init__(self, *args, **kwargs)
