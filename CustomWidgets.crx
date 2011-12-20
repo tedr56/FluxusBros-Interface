@@ -1,0 +1,52 @@
+<?xml version="1.0" ?>
+<resource>
+  <component class="Component" name="wxFader" provider="component">
+    <groups>
+      <item>control</item>
+    </groups>
+    <attributes>
+      <item>input_type</item>
+      <item>address</item>
+    </attributes>
+    <has-name>1</has-name>
+    <module></module>
+    <handler>wxFaderCtrlXmlHandler</handler>
+    <index>-1</index>
+  </component>
+  <component class="Component" name="wxKnob" provider="component">
+    <groups>
+      <item>control</item>
+    </groups>
+    <attributes>
+      <item>input_type</item>
+      <item>address</item>
+    </attributes>
+    <has-name>1</has-name>
+    <module></module>
+    <handler>wxKnobCtrlXmlHandler</handler>
+    <index>-1</index>
+  </component>
+    <component class="Component" name="wxPiano" provider="component">
+    <groups>
+      <item>control</item>
+    </groups>
+    <has-name>1</has-name>
+    <module></module>
+    <handler>wxPianoCtrlXmlHandler</handler>
+    <index>-1</index>
+  </component>
+  <component class="Component" name="wxMediaVisual" provider="component">
+    <groups>
+      <item>control</item>
+    </groups>
+    <attributes>
+      <item>input_type</item>
+      <item>address</item>
+      <item>toggle</item>
+    </attributes>
+    <has-name>1</has-name>
+    <module></module>
+    <handler>wxMediaVisualCtrlXmlHandler</handler>
+    <index>-1</index>
+  </component>
+</resource>
