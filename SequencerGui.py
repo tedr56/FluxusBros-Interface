@@ -30,7 +30,7 @@ class SequencerWindow(ScrolledPanel):
     def InitSequence(self, event):
         NewSequence = SequencePanel(self, wx.NewId(), event)
         self.SequenceSizer.Add(NewSequence, proportion=0, flag=wx.EXPAND|wx.BOTTOM, border=2)
-        self.FitInside()
+        self.Layout()
     def DelSequence(self, item):
         self.SequenceSizer.Remove(item)
         self.Layout()
@@ -92,6 +92,10 @@ class SequencePanel(wx.Panel):
         self.SetSizer(hbox)
         wx.PostEvent(self, MessageGet(event.GetEventObject(), Source=self))
         EVT_WIDGET_SEQUENCER_MESSAGE_UNRECORD(self, self.Sequence.DelSequence)
+    def GetValue(self):
+        return self.Sequence.GetValue()
+    def GetRecording(self):
+        return self.Sequence.GetRecording()
     def GetNumSequence(self):
         return self.NumSequence
     def SetNumSequence(self, num):
@@ -192,6 +196,8 @@ class SequenceGraph(wx.Panel):
             self.SetInput(address=252)
             self.SetInput(address=251)
             self.SetInput(address=250)
+        ## Store the Value for Player change recovery
+        self.Value = Value
         wx.CallAfter(self.InitDraw)
     def InitDraw(self):
         self.pDC.BeginDrawing()
@@ -294,6 +300,7 @@ class SequenceGraph(wx.Panel):
                     #~ print("pop record")
                     #~ self.Seq[self.SeqN]
                 else:
+                    self.Value = self.NextSeq['Value']
                     wx.PostEvent(self, InternalMessage(self.parent, self.NextSeq['Value']))
                     self.SeqN += 1
                     if self.SeqN >= len(self.Seq):
@@ -392,8 +399,10 @@ class SequenceGraph(wx.Panel):
         #~ self.SetClockReq()
         #~ self.InitDraw()
     def SetClockReq(self):
-        
-        
         self.ClockDraw(self.Time * 24.0)
         self.OnSize(None)
         self.ClockDraw(self.dTime)
+    def GetValue(self):
+        return self.Value
+    def GetRecording(self):
+        return True

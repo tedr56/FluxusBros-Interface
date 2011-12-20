@@ -22,6 +22,7 @@ class ClockControl(wx.PyControl):
         self.InitUI()
         #~ print("Clock")
         self.internClock = InternalClock(self)
+        self.Bind(wx.EVT_WINDOW_DESTROY, self.OnDestroy)
     def InitUI(self):
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         text = wx.StaticText(self, -1, "Clock: ")
@@ -32,13 +33,17 @@ class ClockControl(wx.PyControl):
         #self.Fit()
         self.Layout()
     def SetBpm(self, bpm):
-        print bpm
+        self.internClock.SetBpm(bpm)
     def SetClockMode(self, Mode):
         if Mode == 'Internal':
-            self.internClock = InternalClock(self)
+            self.internClock.Start()
         elif Mode == 'External':
-            if self.internClock:
-                self.internClock.Stop()
+            self.internClock.Stop()
+    def OnDestroy(self, event):
+        print("ClockControl Destroy")
+        self.internClock.OnDestroy(event)
+        event.Skip()
+        
         
 
 

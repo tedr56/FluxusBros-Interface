@@ -41,8 +41,9 @@ def EVT_WIDGET_MESSAGE_UNRECORD(win, func):
     win.Connect(-1, -1, EVT_WIDGET_MESSAGE_UNRECORD_ID, func)
 
 class MessageUnRecord(Message):
-    def __init__(self, Object, Id, Type, Address, Option=None):
-        Message.__init__(self, Object, Id, Type, Address, Option=None)
+    def __init__(self, Object, Id, Type=None, Address=None, Option=None):
+        Message.__init__(self, Object, Id, Type, Address, Option)
+        #~ print("Unrecord Message")
         self.SetEventType(EVT_WIDGET_MESSAGE_UNRECORD_ID)
 
 #Event from Widget to ask their recorded messages
@@ -149,6 +150,8 @@ class MessageDispatch(wx.PyEvtHandler):
     def AddInMessage(self, event):
         thread.start_new_thread(self.Dispatch.AddInMessage, (event,))
     def DelInMessage(self, event):
+        #~ print("debug MessageDispatch")
+        #~ print event
         thread.start_new_thread(self.Dispatch.DelInMessage, (event,))
     def GetInMessage(self,event):
         thread.start_new_thread(self.Dispatch.GetInMessage, (event,))
@@ -259,33 +262,53 @@ class MessageDispatchRules(wx.PyEvtHandler):
                 self.OutTypeMessages[Type].append(MessagePos)
             else:
                 self.OutTypeMessages[Type] = [MessagePos]
+            if not Object.GetRecording():
+                for o in self.OutTypeMessages[Type]:
+                    InternalObject = self.OutMessages[o]
+                    if not InternalObject.GetId() == Id:
+                        if InternalObject.GetAddress() == Address:
+                            if InternalObject.GetEventObject().GetRecording():
+                                wx.PostEvent(Object, MessageSequencerRecord(InternalObject.GetEventObject(), InternalObject.GetEventObject().GetValue()))
+                                break
             #~ print self.OutObjectMessages
+    def GetTypeInMessages(self):
+        return self.OutTypeMessages
+    def GetInMessages(self):
+        return self.OutObjectMessages
     def DelInMessage(self, event):
         #~ print("DelInMessage")
         #~ print self.OutObjectMessages
         #~ print self.OutTypeMessages
-        Object = event.GetEventObject()
         Id = event.GetId()
         Type = event.GetType()
         Address = event.GetAddress()
         if Id in self.OutObjectMessages:
             MessageIndex = self.OutObjectMessages[Id]
+            #~ if not Type and not Address and len(MessageIndex) == 1:
+                #~ Index = MessageIndex[0]
+                #~ DefaultMsg = self.OutMessages[Index]
+                #~ Type = DefaultMsg.GetType()
+                #~ Address = DefaultMsg.GetAddress()
+                #~ print("MonoSub")
+                #~ print Type
+                #~ print Address
             for MsgPos in MessageIndex:
                 Msg = self.OutMessages[MsgPos]
                 MsgType = Msg.GetType()
                 MsgAddress = Msg.GetAddress()
-                if MsgType == Type and MsgAddress == Address:
+                if (MsgType == Type and MsgAddress == Address) or (Type == None and Address == None):
                     self.OutMessages.pop(MsgPos)
                     index = self.SearchIndex(MsgPos, self.OutObjectMessages[Id])
                     if not index == None:
                         self.OutObjectMessages[Id].pop(index)
                         if len(self.OutObjectMessages[Id]) == 0:
                             del self.OutObjectMessages[Id]
-                    index = self.SearchIndex(MsgPos, self.OutTypeMessages[Type])
+                    index = self.SearchIndex(MsgPos, self.OutTypeMessages[MsgType])
                     if not index == None:
-                        self.OutTypeMessages[Type].pop(index)
-                        if len(self.OutTypeMessages[Type]) == 0:
-                            del self.OutTypeMessages[Type]
+                        self.OutTypeMessages[MsgType].pop(index)
+#~ TODO : Remplacer la recherche par Type par Objet/Id dans self.OutMessages (cf ligne 256)    
+                        if len(self.OutTypeMessages[MsgType]) == 0:
+                            del self.OutTypeMessages[MsgType]
                     #~ print self.OutObjectMessages
                     #~ print self.OutTypeMessages
                     #~ print range(MsgPos+1, len(self.OutMessages)+1)
@@ -308,25 +331,6 @@ class MessageDispatchRules(wx.PyEvtHandler):
                                 #~ print("ElmtTypeIndex: %i" % ElmtIndex)
                                 self.OutTypeMessages[ElmtType].pop(index3)
                                 self.OutTypeMessages[ElmtType].insert(index3, (ElmtIndex-1))
-                            #~ else:
-                                #~ print("Index3 not found")
-                                #~ print len(self.OutMessages)
-                                #~ print elmt
-                                #~ print self.OutTypeMessages[ElmtType]
-                                #~ print self.OutObjectMessages
-                        #~ else:
-                            #~ print("Index2 not found")
-                            #~ print ElmtId
-                            #~ print MsgPos
-                            #~ print index2
-                            #~ print len(self.OutMessages)
-                            #~ print elmt
-                            #~ print self.OutObjectMessages[ElmtId]
-                            #~ print self.OutObjectMessages
-                    #~ print self.OutObjectMessages
-                    #~ print self.OutTypeMessages
-        #~ else:
-            #~ print("Element already deleted")
     def GetInMessage(self,event):
         Id = event.GetId()
         if Id in self.OutObjectMessages:
@@ -341,6 +345,7 @@ class MessageDispatchRules(wx.PyEvtHandler):
         Id = event.GetId()
         Value = event.GetValue()
         if Id in self.OutObjectMessages:
+            #~ print self.OutObjectMessages
             for elmt in self.OutObjectMessages[Id]:
                 Elmt = self.OutMessages[elmt]
                 ElmtType = Elmt.GetType()
@@ -373,6 +378,7 @@ class MessageDispatchRules(wx.PyEvtHandler):
             for elmt in self.OutTypeMessages[Type]:
                 Elmt = self.OutMessages[elmt]
                 if Elmt.GetAddress() == Address:
+                    
                     ElmtObject = Elmt.GetEventObject()
                     wx.PostEvent(ElmtObject, WidgetUpdate(ElmtObject , Elmt.GetId(), Type, Address, Value))
     def IsClockEvent(self, data):
@@ -392,6 +398,9 @@ class MessageDispatchRules(wx.PyEvtHandler):
             wx.PostEvent(self.parent , ExternalMidiOutMessage(midi_message))
         elif Type == 'Note':
             if Value:
+                #~ print Address[0]
+                #~ print Address[1]
+                #~ print Value
                 midi_message = MidiMessage().noteOn(Address[0] , Address[1], Value)
                 wx.PostEvent(self.parent , ExternalMidiOutMessage(midi_message))
             else:
