@@ -1,0 +1,431 @@
+<?xml version="1.0" ?>
+<resource>
+  <object class="wxPanel" name="TablePanel">
+    <object class="wxBoxSizer">
+      <object class="sizeritem">
+        <object class="wxBoxSizer">
+          <object class="sizeritem">
+            <object class="wxBoxSizer">
+              <object class="sizeritem">
+                <object class="wxFader" name="fader1">
+                  <input_type>CC</input_type>
+                  <address>[1, 28]</address>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxFader" name="fader2">
+                  <input_type>CC</input_type>
+                  <address>[1, 29]</address>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxFader" name="fader3">
+                  <input_type>CC</input_type>
+                  <address>[1, 30]</address>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxFader" name="fader4">
+                  <input_type>CC</input_type>
+                  <address>[1, 31]</address>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+              <orient>wxHORIZONTAL</orient>
+              <object class="sizeritem">
+                <object class="wxFader" name="fader5">
+                  <input_type>CC</input_type>
+                  <address>[1, 27]</address>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxFader" name="fader6">
+                  <input_type>CC</input_type>
+                  <address>[1, 26]</address>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxFader" name="fader7">
+                  <input_type>CC</input_type>
+                  <address>[1, 25]</address>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxFader" name="fader8">
+                  <input_type>CC</input_type>
+                  <address>[1, 24]</address>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+            </object>
+            <option>2</option>
+            <flag>wxEXPAND</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxGridSizer">
+              <object class="sizeritem">
+                <object class="wxMediaVisual" name="media1">
+                  <input_type>CC</input_type>
+                  <address>[3, 74]</address>
+                  <toggle>True</toggle>
+                </object>
+              </object>
+              <object class="sizeritem">
+                <object class="wxMediaVisual" name="media2">
+                  <input_type>CC</input_type>
+                  <address>[3, 34]</address>
+                  <toggle>True</toggle>
+                </object>
+              </object>
+              <object class="sizeritem">
+                <object class="wxMediaVisual" name="media3">
+                  <input_type>CC</input_type>
+                  <address>[3, 75]</address>
+                  <toggle>True</toggle>
+                </object>
+              </object>
+              <object class="sizeritem">
+                <object class="wxMediaVisual" name="media4">
+                  <input_type>CC</input_type>
+                  <address>[3, 35]</address>
+                  <toggle>True</toggle>
+                </object>
+              </object>
+              <object class="sizeritem">
+                <object class="wxMediaVisual" name="media5">
+                  <input_type>CC</input_type>
+                  <address>[3, 31]</address>
+                  <toggle>True</toggle>
+                </object>
+              </object>
+              <object class="sizeritem">
+                <object class="wxMediaVisual" name="media6">
+                  <input_type>CC</input_type>
+                  <address>[3, 64]</address>
+                  <toggle>True</toggle>
+                </object>
+              </object>
+              <object class="sizeritem">
+                <object class="wxMediaVisual" name="media7">
+                  <input_type>CC</input_type>
+                  <address>[3, 24]</address>
+                  <toggle>True</toggle>
+                </object>
+              </object>
+              <object class="sizeritem">
+                <object class="wxMediaVisual" name="media8">
+                  <input_type>CC</input_type>
+                  <address>[3, 65]</address>
+                  <toggle>True</toggle>
+                </object>
+              </object>
+              <object class="sizeritem">
+                <object class="wxMediaVisual" name="media9">
+                  <input_type>CC</input_type>
+                  <address>[3, 25]</address>
+                  <toggle>True</toggle>
+                </object>
+              </object>
+              <object class="sizeritem">
+                <object class="wxMediaVisual" name="media10">
+                  <input_type>CC</input_type>
+                  <address>[3, 21]</address>
+                  <toggle>True</toggle>
+                </object>
+              </object>
+              <object class="sizeritem">
+                <object class="wxMediaVisual" name="media11">
+                  <input_type>CC</input_type>
+                  <address>[3, 54]</address>
+                  <toggle>True</toggle>
+                </object>
+              </object>
+              <object class="sizeritem">
+                <object class="wxMediaVisual" name="media12">
+                  <input_type>CC</input_type>
+                  <address>[3, 14]</address>
+                  <toggle>True</toggle>
+                </object>
+              </object>
+              <object class="sizeritem">
+                <object class="wxMediaVisual" name="media13">
+                  <input_type>CC</input_type>
+                  <address>[3, 55]</address>
+                  <toggle>True</toggle>
+                </object>
+              </object>
+              <object class="sizeritem">
+                <object class="wxMediaVisual" name="media14">
+                  <input_type>CC</input_type>
+                  <address>[3, 15]</address>
+                  <toggle>True</toggle>
+                </object>
+              </object>
+              <object class="sizeritem">
+                <object class="wxMediaVisual" name="media15">
+                  <input_type>CC</input_type>
+                  <address>[3, 11]</address>
+                  <toggle>True</toggle>
+                </object>
+              </object>
+              <object class="sizeritem">
+                <object class="wxMediaVisual" name="media16">
+                  <input_type>CC</input_type>
+                  <address>[3, 44]</address>
+                  <toggle>True</toggle>
+                </object>
+              </object>
+              <object class="sizeritem">
+                <object class="wxMediaVisual" name="media17">
+                  <input_type>CC</input_type>
+                  <address>[3, 4]</address>
+                  <toggle>True</toggle>
+                </object>
+              </object>
+              <object class="sizeritem">
+                <object class="wxMediaVisual" name="media18">
+                  <input_type>CC</input_type>
+                  <address>[3, 45]</address>
+                  <toggle>True</toggle>
+                </object>
+              </object>
+              <object class="sizeritem">
+                <object class="wxMediaVisual" name="media19">
+                  <input_type>CC</input_type>
+                  <address>[3, 5]</address>
+                  <toggle>True</toggle>
+                </object>
+              </object>
+              <object class="sizeritem">
+                <object class="wxMediaVisual" name="media20">
+                  <input_type>CC</input_type>
+                  <address>[3, 1]</address>
+                  <toggle>True</toggle>
+                </object>
+              </object>
+              <cols>5</cols>
+              <rows>4</rows>
+            </object>
+            <option>0</option>
+          </object>
+          <orient>wxVERTICAL</orient>
+        </object>
+        <option>3</option>
+        <flag>wxEXPAND</flag>
+      </object>
+      <orient>wxHORIZONTAL</orient>
+      <object class="sizeritem">
+        <object class="wxBoxSizer">
+          <object class="sizeritem">
+            <object class="wxGridSizer">
+              <object class="sizeritem">
+                <object class="wxKnob" name="knob1">
+                  <input_type>CC</input_type>
+                  <address>[1, 4]</address>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxKnob" name="knob2">
+                  <input_type>CC</input_type>
+                  <address>[1, 3]</address>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxKnob" name="knob3">
+                  <input_type>CC</input_type>
+                  <address>[1, 12]</address>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxKnob" name="knob4">
+                  <input_type>CC</input_type>
+                  <address>[1, 11]</address>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxKnob" name="knob5">
+                  <input_type>CC</input_type>
+                  <address>[1, 16]</address>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxKnob" name="knob6">
+                  <input_type>CC</input_type>
+                  <address>[1, 5]</address>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxKnob" name="knob7">
+                  <input_type>CC</input_type>
+                  <address>[1, 2]</address>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxKnob" name="knob8">
+                  <input_type>CC</input_type>
+                  <address>[1, 13]</address>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxKnob" name="knob9">
+                  <input_type>CC</input_type>
+                  <address>[1, 10]</address>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxKnob" name="knob10">
+                  <input_type>CC</input_type>
+                  <address>[1, 17]</address>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxKnob" name="knob11">
+                  <input_type>CC</input_type>
+                  <address>[1, 6]</address>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxKnob" name="knob12">
+                  <input_type>CC</input_type>
+                  <address>[1, 1]</address>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxKnob" name="knob13">
+                  <input_type>CC</input_type>
+                  <address>[1, 14]</address>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxKnob" name="knob14">
+                  <input_type>CC</input_type>
+                  <address>[1, 9]</address>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxKnob" name="knob15">
+                  <input_type>CC</input_type>
+                  <address>[1, 18]</address>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxKnob" name="knob16">
+                  <input_type>CC</input_type>
+                  <address>[1, 7]</address>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxKnob" name="knob17">
+                  <input_type>CC</input_type>
+                  <address>[1, 0]</address>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxKnob" name="knob18">
+                  <input_type>CC</input_type>
+                  <address>[1, 15]</address>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxKnob" name="knob19">
+                  <input_type>CC</input_type>
+                  <address>[1, 8]</address>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxKnob" name="knob20">
+                  <input_type>CC</input_type>
+                  <address>[1, 19]</address>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+              <cols>5</cols>
+              <rows>4</rows>
+            </object>
+            <option>0</option>
+            <flag>wxEXPAND</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxBoxSizer">
+              <orient>wxHORIZONTAL</orient>
+              <object class="sizeritem">
+                <object class="wxFader" name="crossfader1">
+                  <input_type>CC</input_type>
+                  <address>[1, 20]</address>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+              <object class="sizeritem">
+                <object class="wxFader" name="crossfader1">
+                  <input_type>CC</input_type>
+                  <address>[1, 21]</address>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+            </object>
+            <option>1</option>
+            <flag>wxEXPAND</flag>
+          </object>
+          <orient>wxVERTICAL</orient>
+        </object>
+        <option>0</option>
+        <flag>wxEXPAND</flag>
+      </object>
+    </object>
+  </object>
+</resource>
