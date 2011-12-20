@@ -24,6 +24,7 @@ class Connections:
         
         self.port_in_wishes = []
         self.port_out_wishes = []
+        
         for in_wish in in_midi_wishes:
             self.add_in_port_wish(in_wish)
         for out_wish in out_midi_wishes:
@@ -64,7 +65,7 @@ class Connections:
             #~ if input_port_name in self.port_in_wishes:
                 #~ print("Port found")
             if input_port_name in self.port_in_wishes and input_port_name not in self.in_ports_connexions:
-                print("%s found" % input_port_name)
+                print("Midi Input %s found" % input_port_name)
                 self.connect_input_port(input_port_name, input_port)
         #disconnect connected ports no longer in input port wish list
         input_unwishes = dict()
@@ -79,7 +80,7 @@ class Connections:
             output_port_name = self.MidiOut.getPortName(output_port)
             #~ print output_port_name
             if output_port_name in self.port_out_wishes and output_port_name not in self.out_ports_connexions:
-                print("%s found" % output_port_name)
+                print("Midi Output %s found" % output_port_name)
                 self.connect_output_port(output_port_name, output_port)
         #disconnect connected ports no longer in output port wish list
         output_unwishes = dict()
