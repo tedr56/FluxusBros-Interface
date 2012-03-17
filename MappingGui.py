@@ -15,8 +15,9 @@ class PolygonCustom(FloatCanvas.Polygon):
         Canvas.Draw()
 
 class PolygonMultiCustom(wx.PyEvtHandler):
-    def __init__(self, parent, Canvas=None, id=wx.NewId(), Points=[[1,1,0], [50,1,0], [50,50,0], [1,50,0]], LineColor = "Yellow", LineStyle="Solid", LineWidth = 2, FillColor = "Green", FillStyle = 'Transparent', InForeground=True, Selectable=True, Offset=None):
+    def __init__(self, parent, Canvas=None, id=wx.NewId(), Name=None, Points=[[1,1,0], [50,1,0], [50,50,0], [1,50,0]], LineColor = "Yellow", LineStyle="Solid", LineWidth = 2, FillColor = "Green", FillStyle = 'Transparent', InForeground=True, Selectable=True, Offset=None):
         self.parent = parent
+        self.Name = Name
         if Canvas:
             self.Canvas = Canvas
         else :
@@ -53,6 +54,10 @@ class PolygonMultiCustom(wx.PyEvtHandler):
             print self.GetPoints()
     def GetParent(self):
         return self.parent
+    def GetName(self):
+        return self.Name
+    def SetName(self, Name):
+        self.Name = Name
     def SetAxisPoint(self, Axis, Points, Origin=[0,0,0]):
         if len(Points) == 2 and len(Origin) == 3:
             if   Axis == "XY":
@@ -299,6 +304,7 @@ class CanvasCustom(FloatCanvas.FloatCanvas):
         FloatCanvas.EVT_MIDDLE_DOWN(self, self.OnMiddleClick )
         FloatCanvas.EVT_LEFT_DOWN(self, self.OnLeftClick )
         FloatCanvas.EVT_LEFT_UP(self, self.OnLeftUp )
+        FloatCanvas.EVT_RIGHT_DOWN(self, self.OnRightDown )
         FloatCanvas.EVT_MOTION(self, self.OnMove )
     def KeyDownEvent(self, event):
         global ShiftStatus
@@ -333,6 +339,17 @@ class CanvasCustom(FloatCanvas.FloatCanvas):
         self.PolygonsList.pop(PolyN)
     def GetAxis(self):
         return self.Axis
+    def OnRightDown(self, event):
+        SelectPolys = []
+        for P in self.PolygonsList:
+            if P.GetSelected():
+                SelectPolys.append(P)
+        if len(SelectPolys) == 1:
+            PolyNameDial = PolyNameDialog(self, SelectPolys[0].GetName())
+            PolyNameDial.ShowModal()
+            SelectPolys[0].SetName(PolyNameDial.GetValue())
+            print SelectPolys[0].GetName()
+            PolyNameDial.Destroy()
     def OnMiddleClick(self, event):
         self.AddPolygon(event.GetCoords())
     def OnLeftClick(self, event):
@@ -364,6 +381,13 @@ class SplitterWindowCanvasCustom(wx.SplitterWindow):
     def GetOtherCanvas(self, origin):
         return self.GetParent().GetOtherCanvas(origin)
 
+class PolyNameDialog(wx.TextEntryDialog):
+    def __init__(self, parent, Value):
+        if Value is None:
+            DefValue = ""
+        else :
+            DefValue = Value
+        wx.TextEntryDialog.__init__(self, parent, "Polygon Name", defaultValue = DefValue)
 class MappingPanel(wx.Panel):
     def __init__(self, parent, ):
         wx.Panel.__init__(self, parent)
@@ -384,3 +408,8 @@ class MappingPanel(wx.Panel):
         self.CanvasList = [CanvasFront, CanvasTop]
     def GetOtherCanvas(self, origin):
         return filter(lambda x: x != origin, self.CanvasList)
+
+class MappingFrame(wx.Frame):
+    def __init__(self,parent, id,title,position,size):
+        wx.Frame.__init__(self,parent, id, title, position, size)
+        mappanel = MappingPanel(self)

@@ -13,6 +13,7 @@ from MediaGui import MediaPanel
 from ControlsGui import ControlsPanel
 from TableGui import TablePanel
 from SequencerGui import SequencerPanel
+from MappingGui import MappingFrame
 from configobj import ConfigObj
 from CustomWidgets import wxFader
 from CustomWidgets import wxKnob
@@ -188,26 +189,50 @@ class MyFrame(wx.Frame):
     def InitToolBar(self):
         toolbar = wx.ToolBar(self, -1)
         TOOL_ID = wx.NewId()
+        
+        # Players List
         TOOL_ID_PLAYER_COMBO = wx.NewId()
         self.PlayerCombo = wx.ComboBox(toolbar, TOOL_ID_PLAYER_COMBO, choices = self.Players)
         self.PlayerCombo.SetStringSelection(self.GetPlayerName())
         toolbar.AddControl(self.PlayerCombo)
         wx.EVT_COMBOBOX(self, TOOL_ID_PLAYER_COMBO, self.SetPlayer)
         
+        # Layers List
         TOOL_ID_COMBO_LAYERS = wx.NewId()
         self.LayerCombo = wx.ComboBox(toolbar, TOOL_ID_COMBO_LAYERS, choices = self.Layers)
         self.LayerCombo.SetStringSelection(self.DefaultLayer)
         toolbar.AddControl(self.LayerCombo)
         wx.EVT_COMBOBOX(self, TOOL_ID_COMBO_LAYERS, self.SetLayer)
         
+        #Midi Clock Control
         Clock = ClockControl(toolbar, wx.NewId())
         toolbar.AddControl(Clock)
-        bmp = wx.ArtProvider.GetBitmap(wx.ART_EXECUTABLE_FILE, wx.ART_OTHER, (16, 16))
         toolbar.AddSeparator()
+        
+        # Mapping Modul
+        bmp = wx.ArtProvider.GetBitmap(wx.ART_LIST_VIEW, wx.ART_OTHER, (16, 16))
+        MAPPINGMODUL_ID = wx.NewId()
+        self.MappingModulDialogState = False
+        MappingModul = toolbar.AddLabelTool(MAPPINGMODUL_ID, 'Mapping', bmp, kind=wx.ITEM_NORMAL, shortHelp='Mapping Module')
+        self.Bind(wx.EVT_MENU, self.MappingModulDialog, id=MAPPINGMODUL_ID)
+        toolbar.AddSeparator()
+        
+        # Preference Settings
+        bmp = wx.ArtProvider.GetBitmap(wx.ART_EXECUTABLE_FILE, wx.ART_OTHER, (16, 16))
         ToolbarPreferences = toolbar.AddLabelTool(-1, 'Preferences', bmp, shortHelp='Preferences')
         #~ self.Bind(wx.EVT_MENU, self.onPrint, printTool)
         toolbar.Realize()
         return toolbar
+    def MappingModulDialog(self, event):
+        if self.MappingModulDialogState is False:
+            self.MappingModulDialogState = True
+            MAPPINGFRAME_ID = wx.NewId()
+            MapFrame = MappingFrame(self, MAPPINGFRAME_ID, "Mapping Module", wx.DefaultPosition, (700,700))
+            MapFrame.Bind(wx.EVT_CLOSE, self.MappingModulDialogEnd, id=MAPPINGFRAME_ID)
+            MapFrame.Show()
+    def MappingModulDialogEnd(self, event):
+        self.MappingModulDialogState = False
+        event.GetEventObject().Destroy()
     def SetComboLayers(self):
         self.LayerCombo.Clear()
         self.SetLayers()
