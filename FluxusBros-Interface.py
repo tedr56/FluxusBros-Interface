@@ -49,12 +49,11 @@ FLUXUSBROS_INTERFACE_DIRECTORY = "~/Sources/git/FluxusBros-Interface"
 class MyFrame(wx.Frame):
     def __init__(self, parent, ID, title):
         self.cfg = ConfigObj("./config.cfg")
-        
-        self.InitFrame(parent, ID, title)
-        
+
         self.Dispatch = MessageDispatchRules(self)
-        #~ self.Dispatch = MessageDispatch(self)
-        
+
+        self.InitFrame(parent, ID, title)
+
         EVT_WIDGET_MESSAGE_RECORD(self, self.Dispatch.AddInMessage)
         EVT_WIDGET_MESSAGE_UNRECORD(self, self.Dispatch.DelInMessage)
         EVT_WIDGET_MESSAGE_GET(self, self.Dispatch.GetInMessage)
