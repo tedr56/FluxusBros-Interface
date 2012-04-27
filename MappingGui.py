@@ -3,6 +3,7 @@
 import numpy as N
 import wx
 from wx.lib.floatcanvas import NavCanvas, FloatCanvas
+from MessageDispatch import *
 
 ShiftStatus = False
 
@@ -15,9 +16,13 @@ class PolygonCustom(FloatCanvas.Polygon):
         Canvas.Draw()
 
 class PolygonMultiCustom(wx.PyEvtHandler):
+#~ class PolygonMultiCustom(wx.Object):
     def __init__(self, parent, Canvas=None, id=wx.NewId(), Name=None, Points=[[1,1,0], [50,1,0], [50,50,0], [1,50,0]], LineColor = "Yellow", LineStyle="Solid", LineWidth = 2, FillColor = "Green", FillStyle = 'Transparent', InForeground=True, Selectable=True, Offset=None):
         self.parent = parent
+        self.Id = id
         self.Name = Name
+        wx.PyEvtHandler.__init__(self)
+        #~ wx.Object.__init__(self)
         if Canvas:
             self.Canvas = Canvas
         else :
@@ -52,12 +57,15 @@ class PolygonMultiCustom(wx.PyEvtHandler):
             if self.Selectable:
                 Poly.Bind(FloatCanvas.EVT_FC_LEFT_DOWN, self.SelectPoly)
             print self.GetPoints()
+    def GetId(self):
+        return self.Id
     def GetParent(self):
         return self.parent
     def GetName(self):
         return self.Name
     def SetName(self, Name):
         self.Name = Name
+        self.Selected.SetName(Name)
     def SetAxisPoint(self, Axis, Points, Origin=[0,0,0]):
         if len(Points) == 2 and len(Origin) == 3:
             if   Axis == "XY":
@@ -94,7 +102,9 @@ class PolygonMultiCustom(wx.PyEvtHandler):
         else :
             if not ShiftStatus:
                 self.Canvas.DeSelectOther(self)
-            self.Selected = PolygonSelectMultiCustom(self, Canvas = self.Canvas, Points = self.GetPoints())
+            #~ self.Selected = PolygonSelectMultiCustom(self, Canvas = self.Canvas, Points = self.GetPoints())
+            self.Selected = PolygonSelectMultiCustomMessage(self, Canvas = self.Canvas, Points = self.GetPoints())
+            PolygonSelectMultiCustomMessage
     def GetSelected(self):
         if self.Selected:
             return True
@@ -173,6 +183,7 @@ class PolygonSelectMultiCustom(PolygonMultiCustom):
         for C, PS in self.SelectPoints.iteritems():
                 PS.SetPoints(self.GetAxisPoints(C.GetAxis(), Points), copy=False)
         PolygonMultiCustom.SetPoints(self, Points)
+        self.SetTempPoints(self.Points)
     def SelectPointHit(self, PointSet):
         Canvas = [C for C, PS in self.SelectPoints.iteritems() if PS == PointSet][0]
         Axis = Canvas.GetAxis()
@@ -193,6 +204,7 @@ class PolygonSelectMultiCustom(PolygonMultiCustom):
         PolyPoints = []
         for I in self.GetPoints():
             PolyPoints.append(I)
+        
         if self.PointSelected:
             #PolyPoints = self.GetPoints()
             C = Canvas
@@ -230,7 +242,8 @@ class PolygonSelectMultiCustom(PolygonMultiCustom):
                     dc.DrawLines(self.SelectedPointNeighbors)
                 self.SelectedPointNeighbors[1] = self.GetAxisPoints(C.GetAxis(), [PixelCoords])[0]
                 dc.DrawLines(self.SelectedPointNeighbors)
-                self.TempPoints[Index] = PixelCoords
+                
+                self.SetTempPoints(PointIndex = Index , Value = PixelCoords)
         else :
             if self.SelectDrag is not None:
                 EventCoords = event.GetCoords()
@@ -241,6 +254,11 @@ class PolygonSelectMultiCustom(PolygonMultiCustom):
                 self.SelectDrag = event.GetCoords()
             elif self.Draggable:
                 self.SelectDrag = event.GetCoords()
+    def SetTempPoints(self, Points=None, PointIndex = None, Value = None):
+        if Points is not None:
+            self.TempPoints = Points
+        elif PointIndex is not None and Value is not None:
+            self.TempPoints[PointIndex] = Value
     def SelectAddPoints(self, obj):
         obj.SetDiameter(12)
         obj.SetFillColor('Yellow')
@@ -266,7 +284,6 @@ class PolygonSelectMultiCustom(PolygonMultiCustom):
                 self.Canvas.Draw()
                 Points.insert(InsertIndex, self.AddPointCoords)
                 self.SetPoints(Points)
-                print Points
                 self.AddPointMode = None
                 self.AddPointCoords = None
                 self.SelectedPointNeighbors = None
@@ -294,6 +311,35 @@ class PolygonSelectMultiCustom(PolygonMultiCustom):
             C.RemoveObject(PS)
             C.RemoveObject(self.PolygonsList[C])
             C.Draw()
+
+class PolygonSelectMultiCustomMessage(PolygonSelectMultiCustom):
+    def __init__(self, parent, *args, **kwargs):
+        PolygonSelectMultiCustom.__init__(self, parent, *args, **kwargs)
+        wx.PostEvent(self, MessageRecord(self, self.Id, 'osc', self.GetAddress(), None))
+    def GetAddress(self):
+        address = "/Mapping"
+        address += "/"
+        address += str(self.GetId())
+        address += "/"
+        address += str(self.GetName())
+        address += "/"
+    def SetTempPoints(self, Points=None, PointIndex = None, Value = None):
+        PolygonSelectMultiCustom.SetTempPoints(self, Points, PointIndex, Value)
+        if Points is not None:
+            for i in range(len(self.TempPoints)):
+                value = [i , self.TempPoints[i]]
+                wx.PostEvent(self, InternalMessage(self, value))
+        elif  PointIndex is not None and Value is not None:
+            value = [PointIndex , self.TempPoints[PointIndex]]
+            print("SetTempPoints")
+            Handler = self.parent.GetParent().GetEventHandler()
+            print Handler
+            wx.PostEvent(Handler, InternalMessage(self, value))
+    def SetName(self, Name):
+        PolygonSelectMultiCustom.SetName(Name)
+    def Destroy(self):
+        PolygonSelectMultiCustom.Destroy()
+        wx.PostEvent(self, MessageUnRecord(self, self.GetId(), 'osc', self.GetAddress(), None))
 class CanvasCustom(FloatCanvas.FloatCanvas):
     def __init__(self, parent, id = wx.NewId(), Axis="XY", Toolbar=True, **kwargs):
         FloatCanvas.FloatCanvas.__init__(self,parent, id, **kwargs)
@@ -348,7 +394,6 @@ class CanvasCustom(FloatCanvas.FloatCanvas):
             PolyNameDial = PolyNameDialog(self, SelectPolys[0].GetName())
             PolyNameDial.ShowModal()
             SelectPolys[0].SetName(PolyNameDial.GetValue())
-            print SelectPolys[0].GetName()
             PolyNameDial.Destroy()
     def OnMiddleClick(self, event):
         self.AddPolygon(event.GetCoords())
