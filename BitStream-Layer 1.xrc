@@ -345,6 +345,32 @@
         <option>1</option>
         <flag>wxEXPAND</flag>
       </object>
+      <object class="sizeritem">
+        <object class="wxBoxSizer">
+          <orient>wxVERTICAL</orient>
+          <object class="sizeritem">
+            <object class="wxMediaVisual" name="Visual1">
+              <input_type>CC</input_type>
+              <address>[4, 63]</address>
+              <toggle>1</toggle>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxMediaVisual" name="Visual2">
+              <input_type>CC</input_type>
+              <address>[4, 64]</address>
+              <toggle>1</toggle>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxMediaVisual" name="Visual3">
+              <input_type>CC</input_type>
+              <address>[4, 65]</address>
+              <toggle>1</toggle>
+            </object>
+          </object>
+        </object>
+      </object>
     </object>
   </object>
 </resource>
