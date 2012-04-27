@@ -36,7 +36,7 @@ class ClockControl(wx.PyControl):
         self.internClock.SetBpm(bpm)
     def SetClockMode(self, Mode):
         if Mode == 'Internal':
-            self.internClock.Start()
+            self.internClock = InternalClock(self)
         elif Mode == 'External':
             self.internClock.Stop()
     def OnDestroy(self, event):

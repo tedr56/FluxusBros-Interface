@@ -684,7 +684,7 @@ class InternalClock(wx.PyEvtHandler, Thread):
         
         EVT_WIDGET_UPDATE(self, self.WidgetUpdate)
         self.Bind(wx.EVT_WINDOW_DESTROY, self.OnDestroy)
-        wx.CallAfter(self.ProcessEvent, MessageRecord(self, self.Id, Type = 'Clock', Address = 248))
+        wx.PostEvent(self.parent, MessageRecord(self, self.Id, Type = 'Clock', Address = 248))
         self.start()
     def SetBpm(self, bpm):
         self.bpm = bpm
@@ -692,7 +692,6 @@ class InternalClock(wx.PyEvtHandler, Thread):
         self.dTick = 60 / self.dTime
     def run(self):
         print("Internal Clock Threading")
-        self.ProcessEvent(MessageRecord(self, self.Id, Type = 'Clock', Address = 248))
         while self.KeepGoing:
             wx.PostEvent(self.parent, InternalMessage(self, 1))
             time.sleep(self.dTick)
