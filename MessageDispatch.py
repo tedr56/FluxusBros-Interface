@@ -340,7 +340,7 @@ class MessageDispatchRules(wx.PyEvtHandler):
         else:
                 wx.PostEvent(event.GetSource(), Message(event.GetEventObject(), event.GetId(), None, None, None))
     def InternalMessage(self, event):
-        print("Internal Message")
+        #~ print("Internal Message")
         #~ Object = event.GetEventObject()
         Id = event.GetId()
         Value = event.GetValue()
